@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__mastergo-magic-mcp__mcp__getDsl",
+      "mcp__mastergo-magic-mcp__mcp__getMeta",
+      "mcp__filesystem__directory_tree",
+      "mcp__chrome-devtools__navigate_page",
+      "mcp__chrome-devtools__take_screenshot",
+      "mcp__chrome-devtools__take_snapshot",
+      "mcp__chrome-devtools__click",
+      "mcp__chrome-devtools__evaluate_script",
+      "mcp__mastergo-magic-mcp__mcp__getD2c",
+      "mcp__chrome-devtools__resize_page",
+      "mcp__playwright__playwright_navigate",
+      "Bash(open *)",
+      "Bash(python3 *)",
+      "mcp__mastergo-magic-mcp__mcp__getComponentGenerator",
+      "mcp__apifox__export_openapi",
+      "mcp__filesystem__read_media_file",
+      "Bash(cp /Users/wyz/.claude/image-cache/4e688396-c641-48b5-9e53-68439dbf4831/1.png /Users/wyz/Downloads/zhuoli/AIGC/proto1.png)",
+      "Bash(cp /Users/wyz/.claude/image-cache/4e688396-c641-48b5-9e53-68439dbf4831/2.png /Users/wyz/Downloads/zhuoli/AIGC/proto2.png)",
+      "Bash(tesseract /Users/wyz/Downloads/zhuoli/AIGC/proto1.png /Users/wyz/Downloads/zhuoli/AIGC/proto1-text)",
+      "Bash(tesseract /Users/wyz/Downloads/zhuoli/AIGC/proto2.png /Users/wyz/Downloads/zhuoli/AIGC/proto2-text)",
+      "Bash(tesseract /Users/wyz/Downloads/zhuoli/AIGC/proto1.png stdout)"
+    ]
+  }
+}
