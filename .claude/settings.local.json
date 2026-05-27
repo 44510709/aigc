@@ -21,7 +21,8 @@
       "Bash(cp /Users/wyz/.claude/image-cache/4e688396-c641-48b5-9e53-68439dbf4831/2.png /Users/wyz/Downloads/zhuoli/AIGC/proto2.png)",
       "Bash(tesseract /Users/wyz/Downloads/zhuoli/AIGC/proto1.png /Users/wyz/Downloads/zhuoli/AIGC/proto1-text)",
       "Bash(tesseract /Users/wyz/Downloads/zhuoli/AIGC/proto2.png /Users/wyz/Downloads/zhuoli/AIGC/proto2-text)",
-      "Bash(tesseract /Users/wyz/Downloads/zhuoli/AIGC/proto1.png stdout)"
+      "Bash(tesseract /Users/wyz/Downloads/zhuoli/AIGC/proto1.png stdout)",
+      "mcp__filesystem__search_files"
     ]
   }
 }

@@ -336,8 +336,8 @@ function formatDuration(val) {
 .creation-grid {
   display: grid;
   align-items: start;
-  gap: 44px;
-  grid-template-columns: minmax(360px, 428px) minmax(360px, 432px);
+  gap: 24px;
+  grid-template-columns: minmax(320px, 1fr) minmax(320px, 1fr);
   justify-content: start;
 }
 
@@ -777,5 +777,11 @@ function formatDuration(val) {
   .result-actions {
     flex-direction: column;
   }
+}
+.el-button+.el-button{
+  margin-left: 0;
+}
+.el-radio-button{
+  margin-right: 10px;
 }
 </style>
