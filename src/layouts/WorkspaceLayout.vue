@@ -13,7 +13,7 @@ const { t } = useI18n()
 
     <main class="workspace-main">
       <header class="workspace-topbar">
-        <span class="text-muted">{{ t('workspace.topHint') }}</span>
+        <span class="text-muted"></span>
         <div class="topbar-actions">
           <LanguageSwitch />
           <el-button :icon="Bell" circle />

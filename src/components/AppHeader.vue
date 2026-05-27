@@ -9,7 +9,7 @@ const navItems = [
   { labelKey: 'nav.scriptToVideo', to: '/workspace/script-to-video' },
   { labelKey: 'nav.imageToVideo', to: '/workspace/image-to-video' },
   { labelKey: 'nav.assetLibrary', to: '/workspace/assets' },
-  { labelKey: 'nav.subjectManagement', to: '/workspace/subjects' },
+  // { labelKey: 'nav.subjectManagement', to: '/workspace/subjects' },
 ]
 </script>
 

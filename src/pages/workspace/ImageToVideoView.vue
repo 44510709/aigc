@@ -77,17 +77,33 @@ function handleUpload(rawFile) {
   return false
 }
 
+function addAssetToSelection(asset) {
+  const exists = selectedVisualAssets.value.find(a => a.id === asset.id)
+  if (!exists) {
+    selectedVisualAssets.value.push({
+      id: asset.id,
+      title: asset.title || asset.name,
+      caption: asset.type || 'Custom Asset',
+      image: asset.image || asset.thumbnail,
+    })
+  }
+}
+
 function chooseFromAsset() {
   if (demoAssets.length > 0) {
-    form.assetSource = demoAssets[0]
+    const asset = demoAssets[0]
+    form.assetSource = asset
     form.subjectSource = null
+    addAssetToSelection(asset)
   }
 }
 
 function chooseFromSubject() {
   if (demoSubjects.length > 0) {
-    form.subjectSource = demoSubjects[0]
+    const subject = demoSubjects[0]
+    form.subjectSource = subject
     form.assetSource = null
+    addAssetToSelection({ ...subject, title: subject.name, type: 'Subject' })
   }
 }
 
@@ -188,13 +204,13 @@ function formatDuration(val) {
 
           <!-- Choose from Asset Library -->
           <el-button class="source-btn" @click="chooseFromAsset">
-            Choose from Asset Library
+            {{ t('workspace.chooseAsset') }}
           </el-button>
 
-          <!-- Choose from Subject -->
-          <el-button class="source-btn" @click="chooseFromSubject">
-            Choose from Subject
-          </el-button>
+          <!-- Choose from Subject - hidden temporarily -->
+          <!-- <el-button class="source-btn" @click="chooseFromSubject">
+            {{ t('workspace.chooseSubject') }}
+          </el-button> -->
 
           <!-- Ratio -->
           <div class="ratio-section">
