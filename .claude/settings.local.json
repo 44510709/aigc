@@ -24,7 +24,8 @@
       "Bash(tesseract /Users/wyz/Downloads/zhuoli/AIGC/proto1.png stdout)",
       "mcp__filesystem__search_files",
       "WebFetch(domain:minimax-algeng-chat-tts.oss-cn-wulanchabu.aliyuncs.com)",
-      "Bash(rtk ls *)"
+      "Bash(rtk ls *)",
+      "mcp__chrome-devtools__list_pages"
     ]
   }
 }

@@ -1,7 +1,7 @@
 <script setup>
 import { reactive, ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { UploadFilled, VideoPlay, Download, Link, Delete } from '@element-plus/icons-vue'
+import { UploadFilled, VideoPlay, Download, Link, Delete, CircleCheckFilled } from '@element-plus/icons-vue'
 import { demoAssets, demoSubjects } from '../../utils/demoData.js'
 
 const { t } = useI18n()
@@ -94,11 +94,34 @@ function addAssetToSelection(asset) {
 }
 
 function chooseFromAsset() {
-  if (demoAssets.length > 0) {
-    const asset = demoAssets[0]
-    form.assetSource = asset
-    form.subjectSource = null
-    addAssetToSelection(asset)
+  assetDialogVisible.value = true
+}
+
+const assetDialogVisible = ref(false)
+const tempSelectedAssets = ref([])
+
+function openAssetDialog() {
+  tempSelectedAssets.value = selectedVisualAssets.value.map(a => a.id)
+  assetDialogVisible.value = true
+}
+
+function confirmAssetSelection() {
+  const selected = demoAssets.filter(a => tempSelectedAssets.value.includes(a.id))
+  selectedVisualAssets.value = selected.map(a => ({
+    id: a.id,
+    title: a.title,
+    caption: a.type || 'Custom Asset',
+    image: a.image,
+  }))
+  assetDialogVisible.value = false
+}
+
+function toggleAssetSelection(id) {
+  const idx = tempSelectedAssets.value.indexOf(id)
+  if (idx > -1) {
+    tempSelectedAssets.value.splice(idx, 1)
+  } else {
+    tempSelectedAssets.value.push(id)
   }
 }
 
@@ -349,6 +372,30 @@ function appendToScript(text) {
         </section>
       </div>
     </div>
+
+    <!-- Asset Selection Dialog -->
+    <el-dialog v-model="assetDialogVisible" title="Select Assets" width="680px">
+      <div class="asset-dialog-grid">
+        <div
+          v-for="asset in demoAssets"
+          :key="asset.id"
+          class="asset-dialog-item"
+          :class="{ selected: tempSelectedAssets.includes(asset.id) }"
+          @click="toggleAssetSelection(asset.id)"
+        >
+          <div class="asset-dialog-thumb" :class="`tone-${asset.tone}`"></div>
+          <div class="asset-dialog-info">
+            <strong>{{ asset.title }}</strong>
+            <span>{{ asset.type }}</span>
+          </div>
+          <el-icon v-if="tempSelectedAssets.includes(asset.id)" class="check-icon"><CircleCheckFilled /></el-icon>
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="assetDialogVisible = false">Cancel</el-button>
+        <el-button type="primary" @click="confirmAssetSelection">Confirm ({{ tempSelectedAssets.length }})</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -865,5 +912,64 @@ function appendToScript(text) {
 }
 .el-radio-button{
   margin-right: 10px;
+}
+
+/* Asset Dialog */
+.asset-dialog-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.asset-dialog-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #fff;
+  transition: border-color 0.15s;
+}
+
+.asset-dialog-item:hover {
+  border-color: #d0d4e0;
+}
+
+.asset-dialog-item.selected {
+  border-color: #615ced;
+  background: #f5f4ff;
+}
+
+.asset-dialog-thumb {
+  height: 80px;
+  border-radius: 6px;
+  background: #e4e7ec;
+}
+
+.asset-dialog-info {
+  margin-top: 8px;
+}
+
+.asset-dialog-info strong {
+  display: block;
+  font-size: 12px;
+  color: #1f2937;
+}
+
+.asset-dialog-info span {
+  font-size: 11px;
+  color: #667085;
+}
+
+.asset-dialog-item .check-icon {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  color: #615ced;
+  font-size: 20px;
 }
 </style>
