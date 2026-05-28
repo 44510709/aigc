@@ -17,7 +17,7 @@ const menuItems = [
   { labelKey: 'nav.scriptToVideo', to: '/workspace/script-to-video', icon: Film },
   // { labelKey: 'nav.assetLibrary', to: '/workspace/assets', icon: FolderOpened },
   // { labelKey: 'nav.subjectManagement', to: '/workspace/subjects', icon: User },
-  // { labelKey: 'nav.history', to: '/workspace/history', icon: Collection },
+  { labelKey: 'nav.history', to: '/workspace/history', icon: Collection },
 ]
 </script>
 
