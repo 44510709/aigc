@@ -25,7 +25,9 @@
       "mcp__filesystem__search_files",
       "WebFetch(domain:minimax-algeng-chat-tts.oss-cn-wulanchabu.aliyuncs.com)",
       "Bash(rtk ls *)",
-      "mcp__chrome-devtools__list_pages"
+      "mcp__chrome-devtools__list_pages",
+      "mcp__chrome-devtools__press_key",
+      "mcp__mastergo-magic-mcp__version_0_1_7-beta_0"
     ]
   }
 }

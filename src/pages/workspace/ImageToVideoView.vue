@@ -374,7 +374,7 @@ function appendToScript(text) {
     </div>
 
     <!-- Asset Selection Dialog -->
-    <el-dialog v-model="assetDialogVisible" title="Select Assets" width="680px">
+    <el-dialog v-model="assetDialogVisible" :title="t('assets.selectAsset')" width="880px">
       <div class="asset-dialog-grid">
         <div
           v-for="asset in demoAssets"
@@ -392,8 +392,10 @@ function appendToScript(text) {
         </div>
       </div>
       <template #footer>
-        <el-button @click="assetDialogVisible = false">Cancel</el-button>
-        <el-button type="primary" @click="confirmAssetSelection">Confirm ({{ tempSelectedAssets.length }})</el-button>
+        <div class="dialog-footer">
+          <el-button @click="assetDialogVisible = false">{{ t('common.cancel') }}</el-button>
+          <el-button type="primary" @click="confirmAssetSelection">{{ t('common.confirm') }} ({{ tempSelectedAssets.length }})</el-button>
+        </div>
       </template>
     </el-dialog>
   </div>
@@ -566,14 +568,16 @@ function appendToScript(text) {
 
 .selected-assets {
   display: flex;
+  flex-wrap: wrap;
   gap: 30px;
   align-items: flex-start;
   min-height: 104px;
   padding: 2px 12px 5px;
+  max-width: 100%;
 }
 
 .selected-asset {
-  width: 118px;
+  width: calc(20% - 24px);
   min-width: 0;
   text-align: center;
 }
@@ -917,7 +921,7 @@ function appendToScript(text) {
 /* Asset Dialog */
 .asset-dialog-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 14px;
   max-height: 400px;
   overflow-y: auto;
@@ -969,7 +973,28 @@ function appendToScript(text) {
   position: absolute;
   top: 8px;
   right: 8px;
-  color: #615ced;
-  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #615ced;
+  color: #fff;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:deep(.el-dialog__footer) {
+  padding-top: 20px;
+}
+
+.dialog-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.dialog-footer .el-button {
+  min-width: 80px;
 }
 </style>
