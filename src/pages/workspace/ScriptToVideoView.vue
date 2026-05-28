@@ -1,9 +1,54 @@
 <script setup>
-import { reactive } from 'vue'
+import { reactive, ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { VideoPlay, Download, Link } from '@element-plus/icons-vue'
 
 const { t } = useI18n()
-const form = reactive({ script: '', style: 'documentary', duration: 8 })
+const form = reactive({
+  script: '',
+  ratio: '16:9',
+  duration: 8,
+  resolution: '720',
+})
+
+const scenesOptions = ['Sydney Opera House', 'Great Barrier Reef', 'Uluru', 'Showroom']
+const styleOptions = ['leisure', 'realistic', 'off-road', 'Commercial', 'Luxury']
+
+const previewImage = 'https://images.unsplash.com/photo-1536599018102-9f803c140fc1?auto=format&fit=crop&w=900&q=80'
+const pageState = ref('generated')
+const maxChars = 2000
+const scriptCharCount = computed(() => form.script.length)
+
+const recentGenerations = ref([
+  { id: 1, title: 'Adventure Story Opening', time: '2 hours ago', progress: 38, status: 'processing', tone: 'pink' },
+  { id: 2, title: 'Product Demo Trailer', time: '5 hours ago', progress: 100, status: 'done', tone: 'mint' },
+  { id: 3, title: 'Social Media Ad', time: '1 day ago', progress: 100, status: 'done', tone: 'sunset' },
+])
+
+function adjustDuration(delta) {
+  const newVal = form.duration + delta
+  if (newVal >= 5 && newVal <= 60) {
+    form.duration = newVal
+  }
+}
+
+function appendToScript(text) {
+  if (form.script && !form.script.endsWith(' ')) {
+    form.script += ' '
+  }
+  form.script += text
+}
+
+function formatDuration(val) {
+  return `${val}s`
+}
+
+function generateVideo() {
+  pageState.value = 'generating'
+  setTimeout(() => {
+    pageState.value = 'generated'
+  }, 3000)
+}
 </script>
 
 <template>
@@ -13,43 +58,143 @@ const form = reactive({ script: '', style: 'documentary', duration: 8 })
         <h1>{{ t('nav.scriptToVideo') }}</h1>
         <p>{{ t('home.scriptDesc') }}</p>
       </div>
-      <el-button type="primary">{{ t('workspace.generate') }}</el-button>
     </div>
 
-    <div class="script-grid">
+    <div class="creation-grid">
+      <!-- Left: Form Panel -->
       <section class="panel form-panel">
         <el-form label-position="top" :model="form">
           <el-form-item :label="t('workspace.prompt')">
-            <el-input
-              v-model="form.script"
-              type="textarea"
-              :rows="14"
-              :placeholder="t('workspace.scriptPlaceholder')"
-            />
+            <div class="script-input-wrapper">
+              <el-input
+                v-model="form.script"
+                type="textarea"
+                :rows="7"
+                :placeholder="t('workspace.scriptPlaceholder')"
+                :maxlength="maxChars"
+                show-word-limit
+                class="script-textarea"
+              />
+              <div class="script-tags">
+                <span class="tag-label">Scenes:</span>
+                <el-button
+                  v-for="scene in scenesOptions"
+                  :key="scene"
+                  size="small"
+                  class="tag-btn"
+                  @click="appendToScript(scene)"
+                >
+                  {{ scene }}
+                </el-button>
+              </div>
+              <div class="script-tags">
+                <span class="tag-label">Style:</span>
+                <el-button
+                  v-for="style in styleOptions"
+                  :key="style"
+                  size="small"
+                  class="tag-btn"
+                  @click="appendToScript(style)"
+                >
+                  {{ style }}
+                </el-button>
+              </div>
+            </div>
           </el-form-item>
-          <div class="inline-fields">
-            <el-form-item :label="t('workspace.style')">
-              <el-select v-model="form.style">
-                <el-option label="Documentary" value="documentary" />
-                <el-option label="Commercial" value="commercial" />
-                <el-option label="Social Short" value="social" />
-              </el-select>
-            </el-form-item>
-            <el-form-item :label="t('workspace.duration')">
-              <el-input-number v-model="form.duration" :min="5" :max="60" />
+
+          <!-- Ratio -->
+          <div class="ratio-section">
+            <el-form-item label="Video Ratio">
+              <el-radio-group v-model="form.ratio">
+                <el-radio-button value="16:9">16:9</el-radio-button>
+                <el-radio-button value="9:16">9:16</el-radio-button>
+                <el-radio-button value="1:1">1:1</el-radio-button>
+              </el-radio-group>
             </el-form-item>
           </div>
+
+          <!-- Resolution -->
+          <div class="ratio-section">
+            <el-form-item label="Resolution">
+              <el-radio-group v-model="form.resolution">
+                <el-radio-button value="720">720</el-radio-button>
+                <el-radio-button value="480">480</el-radio-button>
+              </el-radio-group>
+            </el-form-item>
+          </div>
+
+          <!-- Duration -->
+          <div class="duration-section">
+            <el-form-item :label="`Duration: ${form.duration}s`">
+              <el-slider
+                v-model="form.duration"
+                :min="5"
+                :max="60"
+                :step="1"
+                :format-tooltip="formatDuration"
+              />
+            </el-form-item>
+            <div class="slider-labels">
+              <span>5s</span>
+              <span>60s</span>
+            </div>
+          </div>
+
+          <el-form-item>
+            <el-button
+              type="primary"
+              size="large"
+              class="generate-btn"
+              :loading="pageState === 'generating'"
+              @click="generateVideo"
+            >
+              {{ t('workspace.generate') }}
+            </el-button>
+          </el-form-item>
         </el-form>
       </section>
 
-      <section class="panel scene-panel">
-        <h2>{{ t('workspace.sceneList') }}</h2>
-        <el-timeline>
-          <el-timeline-item timestamp="Scene 01">Opening visual and title.</el-timeline-item>
-          <el-timeline-item timestamp="Scene 02">Main story with camera movement.</el-timeline-item>
-          <el-timeline-item timestamp="Scene 03">Closing shot and call to action.</el-timeline-item>
-        </el-timeline>
-      </section>
+      <!-- Right: Preview + Recent -->
+      <div class="result-stack">
+        <section class="panel result-panel">
+          <h3>{{ t('workspace.outputPreview') }}</h3>
+          <div class="preview-box">
+            <template v-if="pageState === 'generating'">
+              <el-icon class="is-loading"><VideoPlay /></el-icon>
+              <span>{{ t('workspace.generating') }}</span>
+            </template>
+            <template v-else>
+              <img :src="previewImage" alt="Generated preview" />
+              <button class="play-button" type="button" aria-label="Play preview">
+                <el-icon><VideoPlay /></el-icon>
+              </button>
+            </template>
+          </div>
+          <div class="result-actions">
+            <el-button type="success" :icon="Download">
+              {{ t('workspace.downloadMp4') }}
+            </el-button>
+            <el-button :icon="Link">
+              {{ t('workspace.copyLink') }}
+            </el-button>
+          </div>
+          <p class="quality-note">{{ t('workspace.qualityNote') }}</p>
+        </section>
+
+        <section class="panel recent-section">
+          <h4>{{ t('workspace.recentGenerations') }}</h4>
+          <div v-for="item in recentGenerations" :key="item.id" class="recent-item">
+            <div class="recent-thumb" :class="item.tone"></div>
+            <div class="recent-info">
+              <span class="recent-title">{{ item.title }}</span>
+              <span class="recent-time">{{ item.time }}</span>
+            </div>
+            <span class="recent-status" :class="item.status">
+              {{ item.status === 'done' ? 'finish 100%' : item.progress + '%' }}
+            </span>
+          </div>
+        </section>
+      </div>
     </div>
   </div>
 </template>
@@ -57,7 +202,9 @@ const form = reactive({ script: '', style: 'documentary', duration: 8 })
 <style scoped>
 .workspace-page {
   display: grid;
-  gap: 20px;
+  gap: 24px;
+  width: 100%;
+  max-width: 1120px;
 }
 
 .page-heading {
@@ -65,38 +212,373 @@ const form = reactive({ script: '', style: 'documentary', duration: 8 })
   align-items: center;
   justify-content: space-between;
   gap: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #e6e9f2;
 }
 
 .page-heading h1,
-.scene-panel h2 {
+.result-panel h3 {
   margin: 0;
 }
 
-.page-heading p {
-  margin: 8px 0 0;
-  color: #667085;
+.page-heading h1 {
+  color: #1d2433;
+  font-size: 22px;
+  line-height: 1.2;
+  font-weight: 750;
 }
 
-.script-grid {
+.page-heading p {
+  margin: 7px 0 0;
+  color: #596579;
+  font-size: 14px;
+}
+
+.creation-grid {
   display: grid;
-  gap: 20px;
-  grid-template-columns: minmax(0, 1fr) 360px;
+  align-items: start;
+  gap: 24px;
+  grid-template-columns: minmax(320px, 1fr) minmax(320px, 1fr);
+  justify-content: start;
 }
 
 .form-panel,
-.scene-panel {
-  padding: 20px;
+.result-panel {
+  padding: 22px 20px 18px;
+  box-shadow: 0 1px 3px rgba(18, 27, 43, 0.08);
 }
 
-.inline-fields {
+.form-panel :deep(.el-form-item) {
+  margin-bottom: 10px;
+}
+
+.form-panel :deep(.el-form-item__label) {
+  margin-bottom: 5px;
+  color: #4b5565;
+  font-size: 12px;
+  line-height: 1.3;
+  font-weight: 750;
+}
+
+.form-panel :deep(.el-input__wrapper),
+.form-panel :deep(.el-textarea__inner) {
+  min-height: 40px;
+  border-radius: 9px;
+  box-shadow: 0 0 0 1px #d2d8e2 inset;
+}
+
+.script-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.script-textarea {
+  display: block;
+  width: 100%;
+}
+
+.script-textarea :deep(.el-textarea__inner) {
+  height: 132px !important;
+  min-height: 132px !important;
+  padding: 13px 14px 26px;
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px #d2d8e2 inset;
+  resize: none;
+}
+
+.script-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.tag-label {
+  color: #4b5565;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.tag-btn {
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  color: #4b5565;
+  background: #f1f3f7;
+  border-color: #e5e7eb;
+}
+
+.ratio-section {
+  margin: -3px 0 8px;
+}
+
+.ratio-section :deep(.el-form-item) {
+  margin-bottom: 0;
+}
+
+.ratio-section :deep(.el-radio-group) {
+  overflow: hidden;
+  padding: 4px;
+  border-radius: 9px;
+  background: #f1f3f7;
+}
+
+.ratio-section :deep(.el-radio-button__inner) {
+  min-width: 50px;
+  height: 31px;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #111827;
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 31px;
+  box-shadow: none;
+}
+
+.ratio-section :deep(.el-radio-button:first-child .el-radio-button__inner),
+.ratio-section :deep(.el-radio-button:last-child .el-radio-button__inner) {
+  border-radius: 7px;
+}
+
+.ratio-section :deep(.el-radio-button__original-radio:checked + .el-radio-button__inner) {
+  background: #fff;
+  color: #111827;
+  box-shadow: 0 1px 3px rgba(18, 27, 43, 0.1);
+}
+
+.duration-section {
+  margin-bottom: 8px;
+  padding: 0 4px;
+}
+
+.duration-section :deep(.el-form-item) {
+  margin-bottom: 0;
+}
+
+.duration-section :deep(.el-slider) {
+  --el-slider-main-bg-color: #1d8cff;
+  --el-slider-runway-bg-color: #e5e5e5;
+  height: 22px;
+}
+
+.duration-section :deep(.el-slider__runway) {
+  height: 6px;
+  border-radius: 999px;
+}
+
+.duration-section :deep(.el-slider__button) {
+  width: 13px;
+  height: 13px;
+  border: 0;
+  background: #1687f8;
+}
+
+.duration-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.duration-control .el-button {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+}
+
+.duration-value {
+  min-width: 50px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: -2px;
+  color: #7b8494;
+  font-size: 10px;
+}
+
+.generate-btn {
+  width: 100%;
+  height: 38px;
+  border-radius: 3px;
+  background: #2f63e6;
+  font-weight: 750;
+}
+
+.result-stack {
   display: grid;
-  gap: 14px;
-  grid-template-columns: repeat(2, minmax(0, 220px));
+  gap: 22px;
 }
 
-@media (max-width: 980px) {
-  .script-grid,
-  .inline-fields {
+.result-panel h3 {
+  color: #202536;
+  font-size: 18px;
+  font-weight: 750;
+  margin-bottom: 18px;
+}
+
+.preview-box {
+  position: relative;
+  display: grid;
+  aspect-ratio: 16 / 9;
+  min-height: 216px;
+  place-items: center;
+  margin: 0 0 20px;
+  padding: 5px 14px;
+  border-radius: 8px;
+  color: #667085;
+  background: #d8f7ff;
+  overflow: hidden;
+}
+
+.preview-box img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.play-button {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  display: grid;
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  color: #17537d;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  place-items: center;
+  box-shadow: 0 8px 18px rgba(16, 24, 40, 0.2);
+}
+
+.play-button .el-icon {
+  margin-left: 3px;
+  font-size: 26px;
+}
+
+.result-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.result-actions .el-button {
+  flex: 1;
+  height: 32px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.result-actions :deep(.el-button--success) {
+  --el-button-bg-color: #19a94f;
+  --el-button-border-color: #19a94f;
+  --el-button-hover-bg-color: #148d43;
+  --el-button-hover-border-color: #148d43;
+}
+
+.result-actions .el-button:not(.el-button--success) {
+  border-color: #4b5565;
+  background: #4b5565;
+  color: #fff;
+}
+
+.quality-note {
+  margin: 13px 0 0;
+  color: #5d6878;
+  font-size: 11px;
+  text-align: center;
+}
+
+.recent-section {
+  padding: 23px 25px 18px;
+  box-shadow: 0 1px 3px rgba(18, 27, 43, 0.06);
+}
+
+.recent-section h4 {
+  margin: 0 0 21px;
+  color: #202536;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.recent-item {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  min-height: 56px;
+  margin-bottom: 8px;
+}
+
+.recent-thumb {
+  width: 52px;
+  height: 38px;
+  border-radius: 6px;
+}
+
+.recent-thumb.pink {
+  background: linear-gradient(135deg, #e9c8f3, #f7c8de);
+}
+
+.recent-thumb.mint {
+  background: linear-gradient(135deg, #acd9ff, #b8f4c9);
+}
+
+.recent-thumb.sunset {
+  background: linear-gradient(135deg, #ffef84, #ffb4bd);
+}
+
+.recent-info {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.recent-title {
+  overflow: hidden;
+  color: #202536;
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-time {
+  color: #7b8494;
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.recent-status {
+  color: #101828;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.el-radio-button {
+  margin-right: 10px;
+}
+
+@media (max-width: 1040px) {
+  .workspace-page {
+    max-width: 760px;
+  }
+
+  .creation-grid {
     grid-template-columns: 1fr;
   }
 }
