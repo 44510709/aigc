@@ -15,7 +15,11 @@ const form = reactive({
   script: '',
   ratio: '16:9',
   duration: 5,
+  resolution: '720',
 })
+
+const scenesOptions = ['Sydney Opera House', 'Great Barrier Reef', 'Uluru', 'Showroom']
+const styleOptions = ['leisure', 'realistic', 'off-road', 'Commercial', 'Luxury']
 
 const pageState = ref('generated') // empty | hasImage | generating | generated
 const previewImage =
@@ -121,6 +125,13 @@ function generateVideo() {
 function formatDuration(val) {
   return `${val}s`
 }
+
+function appendToScript(text) {
+  if (form.script && !form.script.endsWith(' ')) {
+    form.script += ' '
+  }
+  form.script += text
+}
 </script>
 
 <template>
@@ -174,10 +185,35 @@ function formatDuration(val) {
                 v-model="form.script"
                 type="textarea"
                 :rows="7"
-                placeholder="Paste or write your script here... (max 2000 chars)"
+                placeholder="A modern right-hand drive car parked in front of Sydney Opera House, Sydney Harbour, clear blue sky, bright natural sunlight, realistic photography, high detail, sharp focus, Australian city scenery, clean composition"
                 :maxlength="maxChars"
+                show-word-limit
+                class="script-textarea"
               />
-              <span class="script-counter">{{ scriptCharCount }} / {{ maxChars }}</span>
+              <div class="script-tags">
+                <span class="tag-label">Scenes:</span>
+                <el-button
+                  v-for="scene in scenesOptions"
+                  :key="scene"
+                  size="small"
+                  class="tag-btn"
+                  @click="appendToScript(scene)"
+                >
+                  {{ scene }}
+                </el-button>
+              </div>
+              <div class="script-tags">
+                <span class="tag-label">Style:</span>
+                <el-button
+                  v-for="style in styleOptions"
+                  :key="style"
+                  size="small"
+                  class="tag-btn"
+                  @click="appendToScript(style)"
+                >
+                  {{ style }}
+                </el-button>
+              </div>
             </div>
           </el-form-item>
 
@@ -219,6 +255,16 @@ function formatDuration(val) {
                 <el-radio-button value="16:9">16:9</el-radio-button>
                 <el-radio-button value="9:16">9:16</el-radio-button>
                 <el-radio-button value="1:1">1:1</el-radio-button>
+              </el-radio-group>
+            </el-form-item>
+          </div>
+
+          <!-- Resolution -->
+          <div class="ratio-section">
+            <el-form-item label="Resolution">
+              <el-radio-group v-model="form.resolution">
+                <el-radio-button value="720">720</el-radio-button>
+                <el-radio-button value="480">480</el-radio-button>
               </el-radio-group>
             </el-form-item>
           </div>
@@ -433,7 +479,12 @@ function formatDuration(val) {
   width: 100%;
 }
 
-.script-input-wrapper :deep(.el-textarea__inner) {
+.script-textarea {
+  display: block;
+  width: 100%;
+}
+
+.script-textarea :deep(.el-textarea__inner) {
   height: 132px !important;
   min-height: 132px !important;
   padding: 13px 14px 26px;
@@ -442,13 +493,28 @@ function formatDuration(val) {
   resize: none;
 }
 
-.script-counter {
-  position: absolute;
-  right: 10px;
-  bottom: 9px;
-  color: #7b8494;
-  font-size: 10px;
-  line-height: 1;
+.script-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.tag-label {
+  color: #4b5565;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.tag-btn {
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  color: #4b5565;
+  background: #f1f3f7;
+  border-color: #e5e7eb;
 }
 
 .selected-assets {
