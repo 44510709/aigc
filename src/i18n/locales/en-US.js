@@ -17,6 +17,7 @@ export default {
     preview: 'Preview',
     status: 'Status',
     optional: 'Optional',
+    viewMore: 'View More',
   },
   nav: {
     home: 'Home',
@@ -98,6 +99,8 @@ export default {
     copyLink: 'Copy Link',
     qualityNote: 'Supports 1080p, No watermark',
     recentGenerations: 'Recent Generations',
+    scenesOptions: ['Sydney Opera House', 'Great Barrier Reef', 'Uluru', 'Showroom'],
+    styleOptions: ['leisure', 'realistic', 'off-road', 'Commercial', 'Luxury'],
   },
   assets: {
     title: 'Asset Library',

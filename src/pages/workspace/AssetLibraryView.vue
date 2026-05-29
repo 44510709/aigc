@@ -1,12 +1,11 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Search, Plus, Delete } from '@element-plus/icons-vue'
+import { Plus, Delete } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { getMediaList, createMedia, deleteMedia, uploadFile } from '../../api/modules/assets.js'
 
 const { t } = useI18n()
-const keyword = ref('')
 const mediaList = ref([])
 const mediaLoading = ref(false)
 const dialogVisible = ref(false)
@@ -24,7 +23,7 @@ function fetchMediaList() {
   mediaLoading.value = true
   getMediaList({ pageSize: 100, keyword: keyword.value })
     .then(res => {
-      if (res.code === 0 && res.data?.rows) {
+      if ((res.code === 0 || res.code === 200) && res.data?.rows) {
         mediaList.value = res.data.rows
       }
     })
@@ -101,8 +100,6 @@ onMounted(() => {
         <p>{{ t('assets.subtitle') }}</p>
       </div>
       <div class="heading-actions">
-        <el-input v-model="keyword" :prefix-icon="Search" :placeholder="t('assets.search')" clearable @keyup.enter="fetchMediaList" />
-        <el-button @click="fetchMediaList">{{ t('assets.searchBtn') }}</el-button>
         <el-button type="primary" :icon="Plus" @click="openCreateDialog">
           {{ t('common.create') }}
         </el-button>

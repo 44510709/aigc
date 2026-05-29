@@ -17,6 +17,7 @@ export default {
     preview: '预览',
     status: '状态',
     optional: '可选',
+    viewMore: '查看更多',
   },
   nav: {
     home: '首页',
@@ -99,6 +100,8 @@ export default {
     copyLink: '复制链接',
     qualityNote: '支持 1080p，无水印',
     recentGenerations: '最近生成',
+    scenesOptions: ['悉尼歌剧院', '大堡礁', '乌卢鲁', 'Showroom'],
+    styleOptions: ['休闲', '写实', '越野', '商业', '豪华'],
   },
   assets: {
     title: '素材库',

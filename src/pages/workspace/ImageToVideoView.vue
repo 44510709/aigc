@@ -1,12 +1,15 @@
 <script setup>
 import { reactive, ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import { UploadFilled, VideoPlay, Download, Link, Delete, CircleCheckFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { demoAssets, demoSubjects } from '../../utils/demoData.js'
 import { getMediaList } from '../../api/modules/assets.js'
+import { createImageVideo, getVideoList } from '../../api/modules/video.js'
 
 const { t } = useI18n()
+const router = useRouter()
 
 // 素材列表
 const mediaList = ref([])
@@ -16,7 +19,7 @@ function fetchMediaList() {
   mediaLoading.value = true
   getMediaList({ pageSize: 100 })
     .then(res => {
-      if (res.code === 0 && res.data?.rows) {
+      if ((res.code === 0 || res.code === 200) && res.data?.rows) {
         mediaList.value = res.data.rows
       }
     })
@@ -37,8 +40,31 @@ const form = reactive({
   resolution: '720',
 })
 
-const scenesOptions = ['Sydney Opera House', 'Great Barrier Reef', 'Uluru', 'Showroom']
-const styleOptions = ['leisure', 'realistic', 'off-road', 'Commercial', 'Luxury']
+const scenesOptions = computed(() => {
+  try {
+    const val = t('workspace.scenesOptions')
+    if (Array.isArray(val)) return val
+    // 如果是 JSON 字符串则解析
+    if (typeof val === 'string') {
+      try { return JSON.parse(val) } catch {}
+    }
+    return ['悉尼歌剧院', '大堡礁', '乌卢鲁', 'Showroom']
+  } catch {
+    return ['悉尼歌剧院', '大堡礁', '乌卢鲁', 'Showroom']
+  }
+})
+const styleOptions = computed(() => {
+  try {
+    const val = t('workspace.styleOptions')
+    if (Array.isArray(val)) return val
+    if (typeof val === 'string') {
+      try { return JSON.parse(val) } catch {}
+    }
+    return ['休闲', '写实', '越野', '商业', '豪华']
+  } catch {
+    return ['休闲', '写实', '越野', '商业', '豪华']
+  }
+})
 
 const pageState = ref('empty') // empty | generating | generated
 const previewImage = 'https://images.unsplash.com/photo-1536599018102-9f803c140fc1?auto=format&fit=crop&w=900&q=80'
@@ -49,17 +75,47 @@ const showResult = computed(() => pageState.value === 'generated' && generatedVi
 
 onMounted(() => {
   fetchMediaList()
+  fetchRecentGenerations()
 })
 
 function generateVideo() {
-  if (!form.image) return
+  console.log('selectedVisualAssets:', selectedVisualAssets.value)
+  console.log('length:', selectedVisualAssets.value.length)
+  if (!form.title) {
+    ElMessage.warning('请填写标题')
+    return
+  }
   pageState.value = 'generating'
-  // 模拟生成，实际应调用接口
-  setTimeout(() => {
-    generatedVideoUrl.value = form.imagePreview || previewImage
-    generatedVideoName.value = form.title || 'video'
-    pageState.value = 'generated'
-  }, 3000)
+
+  const payload = {
+    title: form.title,
+    aspectRatio: form.ratio,
+    duration: form.duration,
+    resolution: form.resolution + 'p',
+  }
+  if (form.script) payload.prompt = form.script
+  // 从素材库选择的素材，只传 materialIds（不上传图片时 imageUrls 由后端处理）
+  if (selectedVisualAssets.value.length > 0) {
+    const ids = selectedVisualAssets.value.map(a => a.id)
+    console.log('mapped ids:', ids)
+    payload.materialIds = ids
+    console.log('payload after:', JSON.stringify(payload))
+  }
+
+  createImageVideo(payload).then(res => {
+    if ((res.code === 0 || res.code === 200) && res.data) {
+      generatedVideoUrl.value = res.data.url || form.imagePreview
+      generatedVideoName.value = form.title
+      pageState.value = 'generated'
+      ElMessage.success('视频生成中，请稍候')
+    } else {
+      pageState.value = 'empty'
+      ElMessage.error(res.msg || '生成失败')
+    }
+  }).catch(() => {
+    pageState.value = 'empty'
+    ElMessage.error('生成失败')
+  })
 }
 
 function handleDownload() {
@@ -77,38 +133,46 @@ function handleCopyLink() {
 }
 
 const selectedVisualAssets = ref([])
-const recentGenerations = ref([
-  {
-    id: 1,
-    title: 'Adventure Story Opening',
-    time: '2 hours ago',
-    progress: 38,
-    status: 'processing',
-    tone: 'pink',
-  },
-  {
-    id: 2,
-    title: 'Product Demo Trailer',
-    time: '5 hours ago',
-    progress: 100,
-    status: 'done',
-    tone: 'mint',
-  },
-  {
-    id: 3,
-    title: 'Social Media Ad',
-    time: '1 day ago',
-    progress: 100,
-    status: 'done',
-    tone: 'sunset',
-  },
-])
+const recentGenerations = ref([])
+
+function fetchRecentGenerations() {
+  getVideoList({ pageSize: 10 }).then(res => {
+    if ((res.code === 0 || res.code === 200) && res.data?.rows) {
+      recentGenerations.value = res.data.rows.map(item => ({
+        id: item.id,
+        title: item.title,
+        time: item.createTime ? formatTime(item.createTime) : '',
+        progress: item.status === 2 ? 100 : (item.status === 1 ? 50 : 0),
+        status: item.status === 2 ? 'done' : (item.status === 1 ? 'processing' : 'pending'),
+        tone: ['pink', 'mint', 'sunset'][item.id % 3],
+        url: item.url,
+      }))
+    }
+  })
+}
+
+function formatTime(isoString) {
+  if (!isoString) return ''
+  const d = new Date(isoString)
+  const now = new Date()
+  const diff = Math.floor((now - d) / 1000)
+  if (diff < 60) return '刚刚'
+  if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`
+  if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`
+  return `${Math.floor(diff / 86400)}天前`
+}
+
+function goToHistory() {
+  router.push('/workspace/history')
+}
 
 const uploadHint = computed(() => `JPG/PNG/WebP, Max 20MB`)
 const maxChars = 2000
 const scriptCharCount = computed(() => form.script.length)
 
-function handleUpload(rawFile) {
+function handleUpload(uploadFile) {
+  const rawFile = uploadFile.raw
+  if (!rawFile || typeof rawFile.arrayBuffer !== 'function') return
   const reader = new FileReader()
   reader.onload = (e) => {
     form.imagePreview = e.target.result
@@ -239,13 +303,13 @@ function appendToScript(text) {
                 v-model="form.script"
                 type="textarea"
                 :rows="7"
-                placeholder="A modern right-hand drive car parked in front of Sydney Opera House, Sydney Harbour, clear blue sky, bright natural sunlight, realistic photography, high detail, sharp focus, Australian city scenery, clean composition"
+                :placeholder="t('workspace.promptPlaceholder')"
                 :maxlength="maxChars"
                 show-word-limit
                 class="script-textarea"
               />
               <div class="script-tags">
-                <span class="tag-label">{{ t('workspace.scenes') }}</span>
+                <span class="tag-label">{{ t('workspace.scenes') || '场景:' }}</span>
                 <el-button
                   v-for="scene in scenesOptions"
                   :key="scene"
@@ -384,11 +448,14 @@ function appendToScript(text) {
             </el-button>
           </div>
 
-          <p class="quality-note">{{ t('workspace.qualityNote') }}</p>
+          <!-- <p class="quality-note">{{ t('workspace.qualityNote') }}</p> -->
         </section>
 
         <section class="panel recent-section">
-          <h4>{{ t('workspace.recentGenerations') }}</h4>
+          <div class="recent-header">
+            <h4>{{ t('workspace.recentGenerations') }}</h4>
+            <span class="view-more" @click="goToHistory">{{ t('common.viewMore') }} &gt;</span>
+          </div>
           <div
             v-for="item in recentGenerations"
             :key="item.id"
@@ -399,10 +466,15 @@ function appendToScript(text) {
               <span class="recent-title">{{ item.title }}</span>
               <span class="recent-time">{{ item.time }}</span>
             </div>
-            <span class="recent-status" :class="item.status">
-              {{ item.status === 'done' ? 'finish 100%' : item.progress + '%' }}
-            </span>
+            <div class="recent-actions">
+              <el-button v-if="item.url" size="small" :icon="Download" circle @click="() => { if(item.url) { const l = document.createElement('a'); l.href = item.url; l.download = item.title + '.mp4'; l.click() } }"></el-button>
+              <el-button v-if="item.url" size="small" :icon="Link" circle @click="() => { if(item.url) { navigator.clipboard.writeText(item.url); ElMessage.success('链接已复制') } }"></el-button>
+              <span class="recent-status" :class="item.status">
+                {{ item.status === 'done' ? '100%' : item.progress + '%' }}
+              </span>
+            </div>
           </div>
+          <el-empty v-if="recentGenerations.length === 0" :description="t('history.empty')" />
         </section>
       </div>
     </div>
@@ -417,7 +489,7 @@ function appendToScript(text) {
           :class="{ selected: tempSelectedAssets.includes(asset.id) }"
           @click="toggleAssetSelection(asset.id)"
         >
-          <div class="asset-dialog-thumb" :style="asset.url ? `background-image: url(${asset.url})` : ''"></div>
+          <el-image :src="asset.url" fit="cover" class="asset-dialog-thumb" />
           <div class="asset-dialog-info">
             <strong>{{ asset.name }}</strong>
             <span>{{ asset.materialType === 1 ? '图片' : '视频' }}</span>
@@ -857,17 +929,30 @@ function appendToScript(text) {
   box-shadow: 0 1px 3px rgba(18, 27, 43, 0.06);
 }
 
-.recent-section h4 {
-  margin: 0 0 21px;
+.recent-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 21px;
+}
+
+.recent-header h4 {
+  margin: 0;
   color: #202536;
   font-size: 13px;
   font-weight: 750;
 }
 
+.view-more {
+  font-size: 12px;
+  color: #615ced;
+  cursor: pointer;
+}
+
 .recent-item {
   display: grid;
-  grid-template-columns: 52px minmax(0, 1fr) auto;
-  gap: 12px;
+  grid-template-columns: 52px minmax(0, 1fr) auto auto;
+  gap: 10px;
   align-items: center;
   min-height: 56px;
   margin-bottom: 8px;
@@ -889,6 +974,12 @@ function appendToScript(text) {
 
 .recent-thumb.sunset {
   background: linear-gradient(135deg, #ffef84, #ffb4bd);
+}
+
+.recent-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
 }
 
 .recent-info {

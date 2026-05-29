@@ -1,13 +1,17 @@
 import http from '../http'
 
-export function createImageVideo(payload) {
-  return http.post('/videos/image-to-video', payload)
+export function getVideoList(params) {
+  return http.get('/pc/video/list', { params })
 }
 
-export function createScriptVideo(payload) {
-  return http.post('/videos/script-to-video', payload)
+export function createImageVideo(data) {
+  return http.post('/pc/video/image-to-video', data)
+}
+
+export function createScriptVideo(data) {
+  return http.post('/pc/video/script-to-video', data)
 }
 
 export function getGenerationHistory(params) {
-  return http.get('/videos/history', { params })
+  return http.get('/pc/video/history', { params })
 }

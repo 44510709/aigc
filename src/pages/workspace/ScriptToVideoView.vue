@@ -2,17 +2,45 @@
 import { reactive, ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { VideoPlay, Download, Link } from '@element-plus/icons-vue'
+import { getMediaList } from '../../api/modules/assets.js'
 
 const { t } = useI18n()
+
+// 素材列表
+const mediaList = ref([])
+const mediaLoading = ref(false)
+
+function fetchMediaList() {
+  mediaLoading.value = true
+  getMediaList({ pageSize: 100 })
+    .then(res => {
+      if ((res.code === 0 || res.code === 200) && res.data?.rows) {
+        mediaList.value = res.data.rows
+      }
+    })
+    .finally(() => {
+      mediaLoading.value = false
+    })
+}
+
+onMounted(() => {
+  fetchMediaList()
+})
+
+const scenesOptions = computed(() => {
+  const val = t('workspace.scenesOptions')
+  return Array.isArray(val) ? val : []
+})
+const styleOptions = computed(() => {
+  const val = t('workspace.styleOptions')
+  return Array.isArray(val) ? val : []
+})
 const form = reactive({
   script: '',
   ratio: '16:9',
   duration: 8,
   resolution: '720',
 })
-
-const scenesOptions = ['Sydney Opera House', 'Great Barrier Reef', 'Uluru', 'Showroom']
-const styleOptions = ['leisure', 'realistic', 'off-road', 'Commercial', 'Luxury']
 
 const previewImage = 'https://images.unsplash.com/photo-1536599018102-9f803c140fc1?auto=format&fit=crop&w=900&q=80'
 const pageState = ref('generated')
@@ -178,7 +206,7 @@ function generateVideo() {
               {{ t('workspace.copyLink') }}
             </el-button>
           </div>
-          <p class="quality-note">{{ t('workspace.qualityNote') }}</p>
+          <!-- <p class="quality-note">{{ t('workspace.qualityNote') }}</p> -->
         </section>
 
         <section class="panel recent-section">
