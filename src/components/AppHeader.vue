@@ -2,15 +2,21 @@
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import LanguageSwitch from './LanguageSwitch.vue'
+import { userStore } from '../stores/user'
 
 const { t } = useI18n()
 
 const navItems = [
   { labelKey: 'nav.scriptToVideo', to: '/workspace/script-to-video' },
   { labelKey: 'nav.imageToVideo', to: '/workspace/image-to-video' },
-  { labelKey: 'nav.assetLibrary', to: '/workspace/assets' },
+  // { labelKey: 'nav.assetLibrary', to: '/workspace/assets' },
   // { labelKey: 'nav.subjectManagement', to: '/workspace/subjects' },
 ]
+
+function handleLogout() {
+  userStore.logout()
+  location.reload()
+}
 </script>
 
 <template>
@@ -27,10 +33,16 @@ const navItems = [
     </nav>
 
     <div class="header-actions">
-      <RouterLink to="/auth/sign-in">{{ t('common.signIn') }}</RouterLink>
-      <RouterLink to="/auth/register">
-        <el-button type="primary" size="small">{{ t('common.getStarted') }}</el-button>
-      </RouterLink>
+      <template v-if="userStore.isLoggedIn()">
+        <span style="color: #667085; font-size: 13px;">{{ userStore.state.user?.username }}</span>
+        <el-button size="small" @click="handleLogout">{{ t('common.signOut') }}</el-button>
+      </template>
+      <template v-else>
+        <RouterLink to="/auth/sign-in">{{ t('common.signIn') }}</RouterLink>
+        <RouterLink to="/auth/register">
+          <el-button type="primary" size="small">{{ t('common.getStarted') }}</el-button>
+        </RouterLink>
+      </template>
       <LanguageSwitch />
     </div>
   </header>
