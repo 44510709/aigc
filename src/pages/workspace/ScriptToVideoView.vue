@@ -76,7 +76,7 @@ function generateVideo() {
                 class="script-textarea"
               />
               <div class="script-tags">
-                <span class="tag-label">Scenes:</span>
+                <span class="tag-label">{{ t('workspace.scenes') }}</span>
                 <el-button
                   v-for="scene in scenesOptions"
                   :key="scene"
@@ -88,7 +88,7 @@ function generateVideo() {
                 </el-button>
               </div>
               <div class="script-tags">
-                <span class="tag-label">Style:</span>
+                <span class="tag-label">{{ t('workspace.style') }}:</span>
                 <el-button
                   v-for="style in styleOptions"
                   :key="style"
@@ -104,7 +104,7 @@ function generateVideo() {
 
           <!-- Ratio -->
           <div class="ratio-section">
-            <el-form-item label="Video Ratio">
+            <el-form-item :label="t('workspace.videoRatio')">
               <el-radio-group v-model="form.ratio">
                 <el-radio-button value="16:9">16:9</el-radio-button>
                 <el-radio-button value="9:16">9:16</el-radio-button>
@@ -115,7 +115,7 @@ function generateVideo() {
 
           <!-- Resolution -->
           <div class="ratio-section">
-            <el-form-item label="Resolution">
+            <el-form-item :label="t('workspace.resolution')">
               <el-radio-group v-model="form.resolution">
                 <el-radio-button value="720">720</el-radio-button>
                 <el-radio-button value="480">480</el-radio-button>
@@ -125,7 +125,7 @@ function generateVideo() {
 
           <!-- Duration -->
           <div class="duration-section">
-            <el-form-item :label="`Duration: ${form.duration}s`">
+            <el-form-item :label="`${t('workspace.duration')}: ${form.duration}s`">
               <el-slider
                 v-model="form.duration"
                 :min="5"

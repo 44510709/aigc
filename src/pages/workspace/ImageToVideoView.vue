@@ -1,10 +1,29 @@
 <script setup>
-import { reactive, ref, computed } from 'vue'
+import { reactive, ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { UploadFilled, VideoPlay, Download, Link, Delete, CircleCheckFilled } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 import { demoAssets, demoSubjects } from '../../utils/demoData.js'
+import { getMediaList } from '../../api/modules/assets.js'
 
 const { t } = useI18n()
+
+// 素材列表
+const mediaList = ref([])
+const mediaLoading = ref(false)
+
+function fetchMediaList() {
+  mediaLoading.value = true
+  getMediaList({ pageSize: 100 })
+    .then(res => {
+      if (res.code === 0 && res.data?.rows) {
+        mediaList.value = res.data.rows
+      }
+    })
+    .finally(() => {
+      mediaLoading.value = false
+    })
+}
 
 const form = reactive({
   title: '',
@@ -21,24 +40,43 @@ const form = reactive({
 const scenesOptions = ['Sydney Opera House', 'Great Barrier Reef', 'Uluru', 'Showroom']
 const styleOptions = ['leisure', 'realistic', 'off-road', 'Commercial', 'Luxury']
 
-const pageState = ref('generated') // empty | hasImage | generating | generated
-const previewImage =
-  'https://images.unsplash.com/photo-1536599018102-9f803c140fc1?auto=format&fit=crop&w=900&q=80'
-const selectedVisualAssets = ref([
-  {
-    id: 1,
-    title: 'TOYOTA HIGHLAND',
-    caption: 'Custom Asset',
-    image:
-      'https://images.unsplash.com/photo-1549927681-0b673b8243ab?auto=format&fit=crop&w=240&q=80',
-  },
-  {
-    id: 2,
-    title: 'MODERN SKTLINE',
-    caption: 'Custom Asset',
-    image: previewImage,
-  },
-])
+const pageState = ref('empty') // empty | generating | generated
+const previewImage = 'https://images.unsplash.com/photo-1536599018102-9f803c140fc1?auto=format&fit=crop&w=900&q=80'
+
+const generatedVideoUrl = ref('')
+const generatedVideoName = ref('')
+const showResult = computed(() => pageState.value === 'generated' && generatedVideoUrl.value)
+
+onMounted(() => {
+  fetchMediaList()
+})
+
+function generateVideo() {
+  if (!form.image) return
+  pageState.value = 'generating'
+  // 模拟生成，实际应调用接口
+  setTimeout(() => {
+    generatedVideoUrl.value = form.imagePreview || previewImage
+    generatedVideoName.value = form.title || 'video'
+    pageState.value = 'generated'
+  }, 3000)
+}
+
+function handleDownload() {
+  if (!generatedVideoUrl.value) return
+  const link = document.createElement('a')
+  link.href = generatedVideoUrl.value
+  link.download = generatedVideoName.value + '.mp4'
+  link.click()
+}
+
+function handleCopyLink() {
+  if (!generatedVideoUrl.value) return
+  navigator.clipboard.writeText(generatedVideoUrl.value)
+  ElMessage.success('链接已复制')
+}
+
+const selectedVisualAssets = ref([])
 const recentGenerations = ref([
   {
     id: 1,
@@ -106,12 +144,12 @@ function openAssetDialog() {
 }
 
 function confirmAssetSelection() {
-  const selected = demoAssets.filter(a => tempSelectedAssets.value.includes(a.id))
+  const selected = mediaList.value.filter(a => tempSelectedAssets.value.includes(a.id))
   selectedVisualAssets.value = selected.map(a => ({
     id: a.id,
-    title: a.title,
+    title: a.title || a.name,
     caption: a.type || 'Custom Asset',
-    image: a.image,
+    image: a.image || a.url,
   }))
   assetDialogVisible.value = false
 }
@@ -138,13 +176,6 @@ function removeVisualAsset(id) {
   selectedVisualAssets.value = selectedVisualAssets.value.filter((asset) => asset.id !== id)
 }
 
-function generateVideo() {
-  pageState.value = 'generating'
-  setTimeout(() => {
-    pageState.value = 'generated'
-  }, 3000)
-}
-
 function formatDuration(val) {
   return `${val}s`
 }
@@ -169,7 +200,7 @@ function appendToScript(text) {
     <div class="creation-grid">
       <!-- Left: Form Panel -->
       <section class="panel form-panel">
-        <h3 class="form-heading">Generate Video from Image</h3>
+        <h3 class="form-heading">{{ t('workspace.imageToVideoTitle') }}</h3>
 
         <el-form label-position="top" :model="form">
           <el-form-item :label="t('workspace.title')">
@@ -214,7 +245,7 @@ function appendToScript(text) {
                 class="script-textarea"
               />
               <div class="script-tags">
-                <span class="tag-label">Scenes:</span>
+                <span class="tag-label">{{ t('workspace.scenes') }}</span>
                 <el-button
                   v-for="scene in scenesOptions"
                   :key="scene"
@@ -226,7 +257,7 @@ function appendToScript(text) {
                 </el-button>
               </div>
               <div class="script-tags">
-                <span class="tag-label">Style:</span>
+                <span class="tag-label">{{ t('workspace.style') }}:</span>
                 <el-button
                   v-for="style in styleOptions"
                   :key="style"
@@ -273,7 +304,7 @@ function appendToScript(text) {
 
           <!-- Ratio -->
           <div class="ratio-section">
-            <el-form-item label="Video Ratio">
+            <el-form-item :label="t('workspace.videoRatio')">
               <el-radio-group v-model="form.ratio">
                 <el-radio-button value="16:9">16:9</el-radio-button>
                 <el-radio-button value="9:16">9:16</el-radio-button>
@@ -284,7 +315,7 @@ function appendToScript(text) {
 
           <!-- Resolution -->
           <div class="ratio-section">
-            <el-form-item label="Resolution">
+            <el-form-item :label="t('workspace.resolution')">
               <el-radio-group v-model="form.resolution">
                 <el-radio-button value="720">720</el-radio-button>
                 <el-radio-button value="480">480</el-radio-button>
@@ -294,7 +325,7 @@ function appendToScript(text) {
 
           <!-- Duration -->
           <div class="duration-section">
-            <el-form-item :label="`Duration: ${form.duration}s`">
+            <el-form-item :label="`${t('workspace.duration')}: ${form.duration}s`">
               <el-slider
                 v-model="form.duration"
                 :min="3"
@@ -326,26 +357,29 @@ function appendToScript(text) {
       <!-- Right: Preview Panel -->
       <div class="result-stack">
         <section class="panel result-panel">
-          <h3>Preview & Result</h3>
+          <h3>{{ t('workspace.outputPreview') }}</h3>
 
           <div class="preview-box">
             <template v-if="pageState === 'generating'">
               <el-icon class="is-loading"><VideoPlay /></el-icon>
               <span>{{ t('workspace.generating') }}</span>
             </template>
-            <template v-else>
-              <img :src="form.imagePreview || previewImage" alt="Generated city preview" />
+            <template v-else-if="showResult">
+              <img :src="generatedVideoUrl" :alt="generatedVideoName" />
               <button class="play-button" type="button" aria-label="Play preview">
                 <el-icon><VideoPlay /></el-icon>
               </button>
             </template>
+            <template v-else>
+              <span class="empty-tip">{{ t('workspace.noResult') }}</span>
+            </template>
           </div>
 
-          <div class="result-actions">
-            <el-button type="success" :icon="Download">
+          <div v-if="showResult" class="result-actions">
+            <el-button type="success" :icon="Download" @click="handleDownload">
               {{ t('workspace.downloadMp4') }}
             </el-button>
-            <el-button :icon="Link">
+            <el-button :icon="Link" @click="handleCopyLink">
               {{ t('workspace.copyLink') }}
             </el-button>
           </div>
@@ -375,18 +409,18 @@ function appendToScript(text) {
 
     <!-- Asset Selection Dialog -->
     <el-dialog v-model="assetDialogVisible" :title="t('assets.selectAsset')" width="880px">
-      <div class="asset-dialog-grid">
+      <div v-loading="mediaLoading" class="asset-dialog-grid">
         <div
-          v-for="asset in demoAssets"
+          v-for="asset in mediaList"
           :key="asset.id"
           class="asset-dialog-item"
           :class="{ selected: tempSelectedAssets.includes(asset.id) }"
           @click="toggleAssetSelection(asset.id)"
         >
-          <div class="asset-dialog-thumb" :class="`tone-${asset.tone}`"></div>
+          <div class="asset-dialog-thumb" :style="asset.url ? `background-image: url(${asset.url})` : ''"></div>
           <div class="asset-dialog-info">
-            <strong>{{ asset.title }}</strong>
-            <span>{{ asset.type }}</span>
+            <strong>{{ asset.name }}</strong>
+            <span>{{ asset.materialType === 1 ? '图片' : '视频' }}</span>
           </div>
           <el-icon v-if="tempSelectedAssets.includes(asset.id)" class="check-icon"><CircleCheckFilled /></el-icon>
         </div>
@@ -631,7 +665,7 @@ function appendToScript(text) {
 .source-btn {
   width: 100%;
   height: 30px;
-  margin-bottom: 4px;
+  margin-bottom: 24px;
   border-color: #d0d6df;
   border-radius: 3px;
   color: #4b5565;
@@ -755,6 +789,12 @@ function appendToScript(text) {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.empty-tip {
+  color: #667085;
+  font-size: 13px;
+  text-align: center;
 }
 
 .play-button {

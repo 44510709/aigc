@@ -29,7 +29,11 @@
       "mcp__chrome-devtools__press_key",
       "mcp__mastergo-magic-mcp__version_0_1_7-beta_0",
       "mcp__filesystem__list_directory",
-      "Bash(rtk curl *)"
+      "Bash(rtk curl *)",
+      "Bash(rtk grep *)",
+      "Bash(rtk read *)",
+      "Bash(rtk wc *)",
+      "WebFetch(domain:app.apifox.com)"
     ]
   }
 }
