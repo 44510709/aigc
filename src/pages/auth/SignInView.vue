@@ -1,10 +1,35 @@
 <script setup>
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import AuthShell from './AuthShell.vue'
+import { userStore } from '../../stores/user'
 
 const { t } = useI18n()
-const form = reactive({ email: '', password: '' })
+const router = useRouter()
+
+const form = reactive({ username: '', password: '' })
+const loading = ref(false)
+const errorMsg = ref('')
+
+function handleLogin() {
+  if (!form.username || !form.password) {
+    errorMsg.value = '请输入用户名和密码'
+    return
+  }
+  loading.value = true
+  errorMsg.value = ''
+  userStore.login(form.username, form.password)
+    .then(() => {
+      router.push('/')
+    })
+    .catch((err) => {
+      errorMsg.value = err.message || '登录失败'
+    })
+    .finally(() => {
+      loading.value = false
+    })
+}
 </script>
 
 <template>
@@ -16,9 +41,11 @@ const form = reactive({ email: '', password: '' })
         <RouterLink to="/auth/register">{{ t('auth.createAccount') }}</RouterLink>
       </p>
 
-      <el-form label-position="top" :model="form">
-        <el-form-item :label="t('auth.email')">
-          <el-input v-model="form.email" placeholder="you@example.com" />
+      <el-alert v-if="errorMsg" :title="errorMsg" type="error" show-icon :closable="false" class="mb-16" />
+
+      <el-form label-position="top" :model="form" @submit.prevent="handleLogin">
+        <el-form-item :label="t('auth.username')">
+          <el-input v-model="form.username" placeholder="用户名" />
         </el-form-item>
         <el-form-item :label="t('auth.password')">
           <el-input v-model="form.password" type="password" show-password placeholder="******" />
@@ -26,7 +53,9 @@ const form = reactive({ email: '', password: '' })
         <div class="form-link-row">
           <RouterLink to="#">{{ t('auth.forgot') }}</RouterLink>
         </div>
-        <el-button type="primary" class="full-button">{{ t('common.signIn') }}</el-button>
+        <el-button type="primary" class="full-button" :loading="loading" @click="handleLogin">
+          {{ t('common.signIn') }}
+        </el-button>
       </el-form>
     </div>
   </AuthShell>
@@ -56,5 +85,9 @@ const form = reactive({ email: '', password: '' })
 
 .full-button {
   width: 100%;
+}
+
+.mb-16 {
+  margin-bottom: 16px;
 }
 </style>

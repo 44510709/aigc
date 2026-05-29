@@ -17,4 +17,12 @@ export default defineConfig({
       resolvers: [ElementPlusResolver()],
     }),
   ],
+  server: {
+    proxy: {
+      '/aigc': {
+        target: 'http://koc.sur-power.com',
+        changeOrigin: true,
+      },
+    },
+  },
 })

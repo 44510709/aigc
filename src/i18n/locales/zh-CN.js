@@ -58,6 +58,7 @@ export default {
     createAccount: '创建账号',
     already: '已有账号？',
     email: '邮箱',
+    username: '用户名',
     password: '密码',
     fullName: '姓名',
     forgot: '忘记密码？',
