@@ -11,10 +11,10 @@ const form = reactive({ code: '' })
   <AuthShell>
     <div class="auth-card">
       <h2>{{ t('auth.verifyTitle') }}</h2>
-      <p>
+      <!-- <p>
         {{ t('auth.already') }}
         <RouterLink to="/auth/sign-in">{{ t('common.signIn') }}</RouterLink>
-      </p>
+      </p> -->
 
       <el-form label-position="top" :model="form">
         <el-form-item :label="t('auth.verifyCode')">

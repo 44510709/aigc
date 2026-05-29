@@ -39,9 +39,9 @@ function handleLogout() {
       </template>
       <template v-else>
         <RouterLink to="/auth/sign-in">{{ t('common.signIn') }}</RouterLink>
-        <RouterLink to="/auth/register">
+        <!-- <RouterLink to="/auth/register">
           <el-button type="primary" size="small">{{ t('common.getStarted') }}</el-button>
-        </RouterLink>
+        </RouterLink> -->
       </template>
       <LanguageSwitch />
     </div>

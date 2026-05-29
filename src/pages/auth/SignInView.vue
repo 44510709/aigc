@@ -36,10 +36,10 @@ function handleLogin() {
   <AuthShell>
     <div class="auth-card">
       <h2>{{ t('auth.signInTitle') }}</h2>
-      <p>
+      <!-- <p>
         {{ t('auth.signInHint') }}
         <RouterLink to="/auth/register">{{ t('auth.createAccount') }}</RouterLink>
-      </p>
+      </p> -->
 
       <el-alert v-if="errorMsg" :title="errorMsg" type="error" show-icon :closable="false" class="mb-16" />
 
