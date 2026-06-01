@@ -71,6 +71,7 @@ const previewImage = 'https://images.unsplash.com/photo-1536599018102-9f803c140f
 
 const generatedVideoUrl = ref('')
 const generatedVideoName = ref('')
+const isPlaying = ref(false)
 const showResult = computed(() => pageState.value === 'generated' && generatedVideoUrl.value)
 
 onMounted(() => {
@@ -148,6 +149,7 @@ function startPolling(videoId) {
           pollingTimer = null
           generatedVideoUrl.value = item.videoUrl || form.imagePreview
           generatedVideoName.value = item.title || form.title
+          isPlaying.value = false
           pageState.value = 'generated'
           ElMessage.success('视频生成完成')
           // 刷新最近生成列表
@@ -490,8 +492,19 @@ function appendToScript(text) {
               <span>{{ t('workspace.generating') }}</span>
             </template>
             <template v-else-if="showResult">
-              <video :src="generatedVideoUrl" controls class="result-video" />
-              <button class="play-button" type="button" aria-label="Play preview">
+              <video
+                :src="generatedVideoUrl"
+                controls
+                class="result-video"
+                @play="isPlaying = true"
+                @pause="isPlaying = false"
+              />
+              <button
+                v-if="!isPlaying"
+                class="play-button"
+                type="button"
+                aria-label="Play preview"
+              >
                 <el-icon><VideoPlay /></el-icon>
               </button>
             </template>
