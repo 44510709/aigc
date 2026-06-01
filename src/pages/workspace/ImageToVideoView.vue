@@ -1,12 +1,12 @@
 <script setup>
-import { reactive, ref, computed, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { UploadFilled, VideoPlay, Download, Link, Delete, CircleCheckFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { demoAssets, demoSubjects } from '../../utils/demoData.js'
 import { getMediaList } from '../../api/modules/assets.js'
-import { createImageVideo, getVideoList } from '../../api/modules/video.js'
+import { createImageVideo, getVideoList, getVideoDetail } from '../../api/modules/video.js'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -78,6 +78,13 @@ onMounted(() => {
   fetchRecentGenerations()
 })
 
+onUnmounted(() => {
+  if (pollingTimer) {
+    clearInterval(pollingTimer)
+    pollingTimer = null
+  }
+})
+
 function generateVideo() {
   console.log('selectedVisualAssets:', selectedVisualAssets.value)
   console.log('length:', selectedVisualAssets.value.length)
@@ -103,19 +110,60 @@ function generateVideo() {
   }
 
   createImageVideo(payload).then(res => {
-    if ((res.code === 0 || res.code === 200) && res.data) {
-      generatedVideoUrl.value = res.data.url || form.imagePreview
-      generatedVideoName.value = form.title
-      pageState.value = 'generated'
-      ElMessage.success('视频生成中，请稍候')
+    if (res.code === 0 || res.code === 200) {
+      if (res.data != null) {
+        const videoId = typeof res.data === 'object' ? (res.data.id || res.data.videoId) : res.data
+        if (videoId) {
+          startPolling(videoId)
+        } else {
+          pageState.value = 'empty'
+          ElMessage.error('生成失败：未返回视频ID')
+        }
+      } else {
+        pageState.value = 'empty'
+        ElMessage.error(res.msg || '生成失败')
+      }
     } else {
       pageState.value = 'empty'
       ElMessage.error(res.msg || '生成失败')
     }
-  }).catch(() => {
+  }).catch(err => {
     pageState.value = 'empty'
-    ElMessage.error('生成失败')
+    console.error('createImageVideo error:', err)
+    const msg = err?.response?.data?.msg || err?.msg || err?.message || '生成失败'
+    ElMessage.error(msg)
   })
+}
+
+let pollingTimer = null
+
+function startPolling(videoId) {
+  pollingTimer = setInterval(() => {
+    getVideoDetail(videoId).then(res => {
+      if ((res.code === 0 || res.code === 200) && res.data) {
+        const item = res.data
+        // status: 0=待处理, 1=处理中, 2=已完成, 3=失败
+        if (item.status === 2) {
+          clearInterval(pollingTimer)
+          pollingTimer = null
+          generatedVideoUrl.value = item.videoUrl || form.imagePreview
+          generatedVideoName.value = item.title || form.title
+          pageState.value = 'generated'
+          ElMessage.success('视频生成完成')
+          // 刷新最近生成列表
+          fetchRecentGenerations()
+        } else if (item.status === 3) {
+          clearInterval(pollingTimer)
+          pollingTimer = null
+          pageState.value = 'empty'
+          ElMessage.error(item.errorMsg || '视频生成失败')
+        }
+        // status === 0 或 1 继续轮询，不做任何处理
+      }
+    }).catch(() => {
+      // 网络错误继续轮询
+    })
+  }, 2000)
 }
 
 function handleDownload() {
@@ -126,10 +174,23 @@ function handleDownload() {
   link.click()
 }
 
-function handleCopyLink() {
+async function handleCopyLink() {
   if (!generatedVideoUrl.value) return
-  navigator.clipboard.writeText(generatedVideoUrl.value)
-  ElMessage.success('链接已复制')
+  try {
+    await navigator.clipboard.writeText(generatedVideoUrl.value)
+    ElMessage.success('链接已复制')
+  } catch {
+    // Fallback for browsers that don't support clipboard API
+    const textarea = document.createElement('textarea')
+    textarea.value = generatedVideoUrl.value
+    textarea.style.position = 'fixed'
+    textarea.style.opacity = '0'
+    document.body.appendChild(textarea)
+    textarea.select()
+    document.execCommand('copy')
+    document.body.removeChild(textarea)
+    ElMessage.success('链接已复制')
+  }
 }
 
 const selectedVisualAssets = ref([])
@@ -429,7 +490,7 @@ function appendToScript(text) {
               <span>{{ t('workspace.generating') }}</span>
             </template>
             <template v-else-if="showResult">
-              <img :src="generatedVideoUrl" :alt="generatedVideoName" />
+              <video :src="generatedVideoUrl" controls class="result-video" />
               <button class="play-button" type="button" aria-label="Play preview">
                 <el-icon><VideoPlay /></el-icon>
               </button>
@@ -856,7 +917,8 @@ function appendToScript(text) {
   overflow: hidden;
 }
 
-.preview-box img {
+.preview-box img,
+.preview-box video {
   display: block;
   width: 100%;
   height: 100%;

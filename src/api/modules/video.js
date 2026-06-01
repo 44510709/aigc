@@ -15,3 +15,7 @@ export function createScriptVideo(data) {
 export function getGenerationHistory(params) {
   return http.get('/pc/video/history', { params })
 }
+
+export function getVideoDetail(id) {
+  return http.get(`/pc/video/${id}`)
+}
