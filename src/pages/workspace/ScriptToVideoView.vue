@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, ref, computed } from 'vue'
+import { reactive, ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { VideoPlay, Download, Link } from '@element-plus/icons-vue'
 import { getMediaList } from '../../api/modules/assets.js'

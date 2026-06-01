@@ -10,6 +10,7 @@ const mediaList = ref([])
 const mediaLoading = ref(false)
 const dialogVisible = ref(false)
 const uploadLoading = ref(false)
+const keyword = ref('')
 
 const form = ref({
   name: '',
