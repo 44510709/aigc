@@ -1,21 +1,89 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { VideoPlay, Delete } from '@element-plus/icons-vue'
+import { VideoPlay, Delete, Download, Link } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import { getVideoList } from '../../api/modules/video.js'
 
 const { t } = useI18n()
 
-const historyItems = ref([
-  { id: 1, title: 'Adventure Story Opening', type: 'Image to Video', time: '2 hours ago', progress: 38, status: 'processing', tone: 'pink' },
-  { id: 2, title: 'Product Demo Trailer', type: 'Script to Video', time: '5 hours ago', progress: 100, status: 'done', tone: 'mint' },
-  { id: 3, title: 'Social Media Ad', type: 'Image to Video', time: '1 day ago', progress: 100, status: 'done', tone: 'sunset' },
-  { id: 4, title: 'Mountain Documentary', type: 'Script to Video', time: '2 days ago', progress: 100, status: 'done', tone: 'sky' },
-  { id: 5, title: 'City Timelapse', type: 'Image to Video', time: '3 days ago', progress: 100, status: 'done', tone: 'purple' },
-])
+const historyItems = ref([])
+const loading = ref(false)
+const playDialogVisible = ref(false)
+const currentVideoUrl = ref('')
+
+function fetchHistory() {
+  loading.value = true
+  getVideoList({ pageSize: 100 })
+    .then(res => {
+      if ((res.code === 0 || res.code === 200) && res.data?.rows) {
+        historyItems.value = res.data.rows.map(item => ({
+          id: item.id,
+          title: item.title,
+          type: item.taskType === 1 ? 'Image to Video' : 'Script to Video',
+          time: item.createTime ? formatTime(item.createTime) : '',
+          progress: item.status === 2 ? 100 : (item.status === 1 ? 50 : 0),
+          status: item.status === 2 ? 'done' : (item.status === 1 ? 'processing' : 'pending'),
+          tone: ['pink', 'mint', 'sunset', 'sky', 'purple'][item.id % 5],
+          url: item.videoUrl,
+        }))
+      }
+    })
+    .finally(() => {
+      loading.value = false
+    })
+}
+
+function formatTime(isoString) {
+  if (!isoString) return ''
+  const d = new Date(isoString)
+  const now = new Date()
+  const diff = Math.floor((now - d) / 1000)
+  if (diff < 60) return '刚刚'
+  if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`
+  if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`
+  return `${Math.floor(diff / 86400)}天前`
+}
+
+function playVideo(url) {
+  if (!url) return
+  currentVideoUrl.value = url
+  playDialogVisible.value = true
+}
+
+function downloadVideo(item) {
+  if (!item.url) return
+  const link = document.createElement('a')
+  link.href = item.url
+  link.download = item.title + '.mp4'
+  link.click()
+}
+
+async function copyLink(url) {
+  if (!url) return
+  try {
+    await navigator.clipboard.writeText(url)
+    ElMessage.success('链接已复制')
+  } catch {
+    const textarea = document.createElement('textarea')
+    textarea.value = url
+    textarea.style.position = 'fixed'
+    textarea.style.opacity = '0'
+    document.body.appendChild(textarea)
+    textarea.select()
+    document.execCommand('copy')
+    document.body.removeChild(textarea)
+    ElMessage.success('链接已复制')
+  }
+}
 
 function deleteItem(id) {
   historyItems.value = historyItems.value.filter(item => item.id !== id)
 }
+
+onMounted(() => {
+  fetchHistory()
+})
 </script>
 
 <template>
@@ -27,15 +95,24 @@ function deleteItem(id) {
       </div>
     </div>
 
-    <section class="panel history-panel">
+    <section class="panel history-panel" v-loading="loading">
       <h3>{{ t('workspace.recentGenerations') }}</h3>
       <div class="history-grid">
         <div v-for="item in historyItems" :key="item.id" class="history-card">
           <div class="history-thumb" :class="item.tone">
-            <img v-if="item.status === 'done'" src="https://images.unsplash.com/photo-1536599018102-9f803c140fc1?auto=format&fit=crop&w=900&q=80" :alt="item.title" />
+            <video
+              v-if="item.status === 'done' && item.url"
+              :src="item.url"
+              class="history-video"
+            />
             <div v-else class="generating-overlay">
               <el-icon class="is-loading"><VideoPlay /></el-icon>
               <span>{{ item.progress }}%</span>
+            </div>
+            <div v-if="item.status === 'done' && item.url" class="thumb-actions">
+              <el-button size="small" :icon="VideoPlay" circle @click="playVideo(item.url)" />
+              <el-button size="small" :icon="Download" circle @click="downloadVideo(item)" />
+              <el-button size="small" :icon="Link" circle @click="copyLink(item.url)" />
             </div>
             <button class="delete-btn" @click="deleteItem(item.id)">
               <el-icon><Delete /></el-icon>
@@ -56,10 +133,14 @@ function deleteItem(id) {
         </div>
       </div>
 
-      <div v-if="historyItems.length === 0" class="history-empty">
+      <div v-if="historyItems.length === 0 && !loading" class="history-empty">
         <p>{{ t('history.empty') }}</p>
       </div>
     </section>
+
+    <el-dialog v-model="playDialogVisible" title="视频播放" width="720px">
+      <video v-if="currentVideoUrl" :src="currentVideoUrl" controls style="width:100%" />
+    </el-dialog>
   </div>
 </template>
 
@@ -125,7 +206,8 @@ function deleteItem(id) {
   overflow: hidden;
 }
 
-.history-thumb img {
+.history-thumb img,
+.history-thumb video {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -181,10 +263,32 @@ function deleteItem(id) {
   cursor: pointer;
   opacity: 0;
   transition: opacity 0.2s;
+  z-index: 2;
 }
 
 .history-thumb:hover .delete-btn {
   opacity: 1;
+}
+
+.thumb-actions {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.history-thumb:hover .thumb-actions {
+  opacity: 1;
+}
+
+.thumb-actions .el-button {
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
 }
 
 .history-info {
