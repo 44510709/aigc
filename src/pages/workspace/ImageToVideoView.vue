@@ -499,14 +499,6 @@ function appendToScript(text) {
                 @play="isPlaying = true"
                 @pause="isPlaying = false"
               />
-              <button
-                v-if="!isPlaying"
-                class="play-button"
-                type="button"
-                aria-label="Play preview"
-              >
-                <el-icon><VideoPlay /></el-icon>
-              </button>
             </template>
             <template v-else>
               <span class="empty-tip">{{ t('workspace.noResult') }}</span>
