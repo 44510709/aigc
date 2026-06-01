@@ -1,12 +1,13 @@
 <script setup>
-import { reactive, ref, computed, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { VideoPlay, Download, Link } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 import { getMediaList } from '../../api/modules/assets.js'
+import { createScriptVideo, getVideoList, getVideoDetail } from '../../api/modules/video.js'
 
 const { t } = useI18n()
 
-// 素材列表
 const mediaList = ref([])
 const mediaLoading = ref(false)
 
@@ -25,33 +26,78 @@ function fetchMediaList() {
 
 onMounted(() => {
   fetchMediaList()
+  fetchRecentGenerations()
+})
+
+onUnmounted(() => {
+  if (pollingTimer) {
+    clearInterval(pollingTimer)
+    pollingTimer = null
+  }
 })
 
 const scenesOptions = computed(() => {
   const val = t('workspace.scenesOptions')
-  return Array.isArray(val) ? val : []
+  if (Array.isArray(val)) return val
+  if (typeof val === 'string') {
+    try { return JSON.parse(val) } catch {}
+  }
+  return ['悉尼歌剧院', '大堡礁', '乌卢鲁', 'Showroom']
 })
+
 const styleOptions = computed(() => {
   const val = t('workspace.styleOptions')
-  return Array.isArray(val) ? val : []
+  if (Array.isArray(val)) return val
+  if (typeof val === 'string') {
+    try { return JSON.parse(val) } catch {}
+  }
+  return ['休闲', '写实', '越野', '商业', '豪华']
 })
+
 const form = reactive({
+  title: '',
   script: '',
   ratio: '16:9',
   duration: 8,
   resolution: '720',
 })
 
-const previewImage = 'https://images.unsplash.com/photo-1536599018102-9f803c140fc1?auto=format&fit=crop&w=900&q=80'
-const pageState = ref('generated')
+const pageState = ref('empty') // empty | generating | generated
 const maxChars = 2000
 const scriptCharCount = computed(() => form.script.length)
 
-const recentGenerations = ref([
-  { id: 1, title: 'Adventure Story Opening', time: '2 hours ago', progress: 38, status: 'processing', tone: 'pink' },
-  { id: 2, title: 'Product Demo Trailer', time: '5 hours ago', progress: 100, status: 'done', tone: 'mint' },
-  { id: 3, title: 'Social Media Ad', time: '1 day ago', progress: 100, status: 'done', tone: 'sunset' },
-])
+const generatedVideoUrl = ref('')
+const generatedVideoName = ref('')
+const showResult = computed(() => pageState.value === 'generated' && generatedVideoUrl.value)
+
+const recentGenerations = ref([])
+
+function fetchRecentGenerations() {
+  getVideoList({ pageSize: 10 }).then(res => {
+    if ((res.code === 0 || res.code === 200) && res.data?.rows) {
+      recentGenerations.value = res.data.rows.map(item => ({
+        id: item.id,
+        title: item.title,
+        time: item.createTime ? formatTime(item.createTime) : '',
+        progress: item.status === 2 ? 100 : (item.status === 1 ? 50 : 0),
+        status: item.status === 2 ? 'done' : (item.status === 1 ? 'processing' : 'pending'),
+        tone: ['pink', 'mint', 'sunset'][item.id % 3],
+        url: item.videoUrl,
+      }))
+    }
+  })
+}
+
+function formatTime(isoString) {
+  if (!isoString) return ''
+  const d = new Date(isoString)
+  const now = new Date()
+  const diff = Math.floor((now - d) / 1000)
+  if (diff < 60) return '刚刚'
+  if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`
+  if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`
+  return `${Math.floor(diff / 86400)}天前`
+}
 
 function adjustDuration(delta) {
   const newVal = form.duration + delta
@@ -72,10 +118,95 @@ function formatDuration(val) {
 }
 
 function generateVideo() {
+  if (!form.title) {
+    ElMessage.warning('请填写标题')
+    return
+  }
   pageState.value = 'generating'
-  setTimeout(() => {
-    pageState.value = 'generated'
-  }, 3000)
+
+  const payload = {
+    title: form.title,
+    prompt: form.script,
+    aspectRatio: form.ratio,
+    duration: form.duration,
+    resolution: form.resolution + 'p',
+  }
+
+  createScriptVideo(payload).then(res => {
+    if (res.code === 0 || res.code === 200) {
+      if (res.data != null) {
+        const videoId = typeof res.data === 'object' ? (res.data.id || res.data.videoId) : res.data
+        if (videoId) {
+          startPolling(videoId)
+        } else {
+          pageState.value = 'empty'
+          ElMessage.error('生成失败：未返回视频ID')
+        }
+      } else {
+        pageState.value = 'empty'
+        ElMessage.error(res.msg || '生成失败')
+      }
+    } else {
+      pageState.value = 'empty'
+      ElMessage.error(res.msg || '生成失败')
+    }
+  }).catch(err => {
+    pageState.value = 'empty'
+    const msg = err?.response?.data?.msg || err?.msg || err?.message || '生成失败'
+    ElMessage.error(msg)
+  })
+}
+
+let pollingTimer = null
+
+function startPolling(videoId) {
+  pollingTimer = setInterval(() => {
+    getVideoDetail(videoId).then(res => {
+      if ((res.code === 0 || res.code === 200) && res.data) {
+        const item = res.data
+        if (item.status === 2) {
+          clearInterval(pollingTimer)
+          pollingTimer = null
+          generatedVideoUrl.value = item.videoUrl || ''
+          generatedVideoName.value = item.title || form.title
+          pageState.value = 'generated'
+          ElMessage.success('视频生成完成')
+          fetchRecentGenerations()
+        } else if (item.status === 3) {
+          clearInterval(pollingTimer)
+          pollingTimer = null
+          pageState.value = 'empty'
+          ElMessage.error(item.errorMsg || '视频生成失败')
+        }
+      }
+    }).catch(() => {})
+  }, 2000)
+}
+
+function handleDownload() {
+  if (!generatedVideoUrl.value) return
+  const link = document.createElement('a')
+  link.href = generatedVideoUrl.value
+  link.download = generatedVideoName.value + '.mp4'
+  link.click()
+}
+
+async function handleCopyLink() {
+  if (!generatedVideoUrl.value) return
+  try {
+    await navigator.clipboard.writeText(generatedVideoUrl.value)
+    ElMessage.success('链接已复制')
+  } catch {
+    const textarea = document.createElement('textarea')
+    textarea.value = generatedVideoUrl.value
+    textarea.style.position = 'fixed'
+    textarea.style.opacity = '0'
+    document.body.appendChild(textarea)
+    textarea.select()
+    document.execCommand('copy')
+    document.body.removeChild(textarea)
+    ElMessage.success('链接已复制')
+  }
 }
 </script>
 
@@ -92,6 +223,10 @@ function generateVideo() {
       <!-- Left: Form Panel -->
       <section class="panel form-panel">
         <el-form label-position="top" :model="form">
+          <el-form-item :label="t('workspace.title')">
+            <el-input v-model="form.title" placeholder="Video title" />
+          </el-form-item>
+
           <el-form-item :label="t('workspace.prompt')">
             <div class="script-input-wrapper">
               <el-input
@@ -191,18 +326,18 @@ function generateVideo() {
               <el-icon class="is-loading"><VideoPlay /></el-icon>
               <span>{{ t('workspace.generating') }}</span>
             </template>
+            <template v-else-if="showResult">
+              <video :src="generatedVideoUrl" controls style="width:100%;height:100%;object-fit:cover;" />
+            </template>
             <template v-else>
-              <img :src="previewImage" alt="Generated preview" />
-              <button class="play-button" type="button" aria-label="Play preview">
-                <el-icon><VideoPlay /></el-icon>
-              </button>
+              <span class="empty-tip">{{ t('workspace.noResult') }}</span>
             </template>
           </div>
-          <div class="result-actions">
-            <el-button type="success" :icon="Download">
+          <div v-if="showResult" class="result-actions">
+            <el-button type="success" :icon="Download" @click="handleDownload">
               {{ t('workspace.downloadMp4') }}
             </el-button>
-            <el-button :icon="Link">
+            <el-button :icon="Link" @click="handleCopyLink">
               {{ t('workspace.copyLink') }}
             </el-button>
           </div>
@@ -466,11 +601,18 @@ function generateVideo() {
   overflow: hidden;
 }
 
-.preview-box img {
+.preview-box img,
+.preview-box video {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.empty-tip {
+  color: #667085;
+  font-size: 13px;
+  text-align: center;
 }
 
 .play-button {

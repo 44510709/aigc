@@ -9,7 +9,7 @@ export function createImageVideo(data) {
 }
 
 export function createScriptVideo(data) {
-  return http.post('/pc/video/script-to-video', data)
+  return http.post('/pc/video/text-to-video', data)
 }
 
 export function getGenerationHistory(params) {
