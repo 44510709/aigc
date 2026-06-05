@@ -33,7 +33,18 @@
       "Bash(rtk grep *)",
       "Bash(rtk read *)",
       "Bash(rtk wc *)",
-      "WebFetch(domain:app.apifox.com)"
+      "WebFetch(domain:app.apifox.com)",
+      "Bash(rtk npm *)",
+      "mcp__chrome-devtools__new_page",
+      "mcp__chrome-devtools__wait_for",
+      "mcp__chrome-devtools__list_network_requests",
+      "mcp__chrome-devtools__get_network_request",
+      "Bash(rtk ps *)",
+      "Bash(curl -s http://localhost:5173/)",
+      "Bash(rtk git *)",
+      "Bash(git -C /Users/wyz/Downloads/zhuoli/AIGC check-ignore -v src/pages/workspace/ImageToVideoView.vue src/router/index.js)",
+      "Bash(md5 *)",
+      "Bash(git diff-index *)"
     ]
   }
 }
