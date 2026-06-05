@@ -44,7 +44,7 @@ const testimonials = ['Sarah Chen', 'Marcus Rodriguez', 'Emily Johnson']
       <h1>{{ t('home.heroTitle') }}</h1>
       <p>{{ t('home.heroDesc') }}</p>
       <div class="hero-actions">
-        <RouterLink :to="{ name: 'register' }">
+        <RouterLink :to="{ name: 'image-to-video' }">
           <el-button type="primary" size="large">{{ t('common.startFree') }}</el-button>
         </RouterLink>
         <RouterLink :to="{ name: 'image-to-video' }">
