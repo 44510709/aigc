@@ -5,7 +5,7 @@ import { useRouter } from 'vue-router'
 import { UploadFilled, VideoPlay, Download, Link, Delete, CircleCheckFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { demoAssets, demoSubjects } from '../../utils/demoData.js'
-import { getMediaList } from '../../api/modules/assets.js'
+import { getMediaList, uploadFile } from '../../api/modules/assets.js'
 import { createImageVideo, getVideoList, getVideoDetail } from '../../api/modules/video.js'
 import enUS from '../../i18n/locales/en-US.js'
 import zhCN from '../../i18n/locales/zh-CN.js'
@@ -66,31 +66,40 @@ onUnmounted(() => {
   }
 })
 
-function generateVideo() {
-  console.log('selectedVisualAssets:', selectedVisualAssets.value)
-  console.log('length:', selectedVisualAssets.value.length)
+async function generateVideo() {
   if (!form.title) {
     ElMessage.warning('请填写标题')
     return
   }
+  if (!form.image && selectedVisualAssets.value.length === 0) {
+    ElMessage.warning(t('workspace.uploadImage'))
+    return
+  }
   pageState.value = 'generating'
 
-  const payload = {
-    title: form.title,
-    aspectRatio: form.ratio,
-    duration: form.duration,
-    resolution: form.resolution + 'p',
-  }
-  if (form.script) payload.prompt = form.script
-  // 从素材库选择的素材，只传 materialIds（不上传图片时 imageUrls 由后端处理）
-  if (selectedVisualAssets.value.length > 0) {
-    const ids = selectedVisualAssets.value.map(a => a.id)
-    console.log('mapped ids:', ids)
-    payload.materialIds = ids
-    console.log('payload after:', JSON.stringify(payload))
-  }
+  try {
+    const payload = {
+      title: form.title,
+      aspectRatio: form.ratio,
+      duration: form.duration,
+      resolution: form.resolution + 'p',
+    }
+    if (form.script) payload.prompt = form.script
+    if (selectedVisualAssets.value.length > 0) {
+      payload.materialIds = selectedVisualAssets.value.map(a => a.id)
+    }
+    if (form.image) {
+      const uploadRes = await uploadFile(form.image)
+      const url = uploadRes?.data?.url || uploadRes?.data || uploadRes?.url
+      if (!url) {
+        pageState.value = 'empty'
+        ElMessage.error('图片上传失败')
+        return
+      }
+      payload.imageUrls = [url]
+    }
 
-  createImageVideo(payload).then(res => {
+    const res = await createImageVideo(payload)
     if (res.code === 0 || res.code === 200) {
       if (res.data != null) {
         const videoId = typeof res.data === 'object' ? (res.data.id || res.data.videoId) : res.data
@@ -108,12 +117,12 @@ function generateVideo() {
       pageState.value = 'empty'
       ElMessage.error(res.msg || '生成失败')
     }
-  }).catch(err => {
+  } catch (err) {
     pageState.value = 'empty'
     console.error('createImageVideo error:', err)
     const msg = err?.response?.data?.msg || err?.msg || err?.message || '生成失败'
     ElMessage.error(msg)
-  })
+  }
 }
 
 let pollingTimer = null
