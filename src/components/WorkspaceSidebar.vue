@@ -12,24 +12,24 @@ import {
 const { t } = useI18n()
 
 const menuItems = [
-  { labelKey: 'nav.home', to: '/', icon: House },
-  { labelKey: 'nav.imageToVideo', to: '/workspace/image-to-video', icon: Picture },
-  { labelKey: 'nav.scriptToVideo', to: '/workspace/script-to-video', icon: Film },
-  { labelKey: 'nav.assetLibrary', to: '/workspace/assets', icon: FolderOpened },
-  // { labelKey: 'nav.subjectManagement', to: '/workspace/subjects', icon: User },
-  { labelKey: 'nav.history', to: '/workspace/history', icon: Collection },
+  { labelKey: 'nav.home', name: 'home', icon: House },
+  { labelKey: 'nav.imageToVideo', name: 'image-to-video', icon: Picture },
+  { labelKey: 'nav.scriptToVideo', name: 'script-to-video', icon: Film },
+  { labelKey: 'nav.assetLibrary', name: 'asset-library', icon: FolderOpened },
+  // { labelKey: 'nav.subjectManagement', name: 'subject-management', icon: User },
+  { labelKey: 'nav.history', name: 'history', icon: Collection },
 ]
 </script>
 
 <template>
   <aside class="workspace-sidebar">
-    <RouterLink class="sidebar-brand" to="/">
+    <RouterLink class="sidebar-brand" :to="{ name: 'home' }">
       <span>{{ t('common.logo') }}</span>
       <strong>{{ t('common.appName') }}</strong>
     </RouterLink>
 
     <nav class="sidebar-nav" aria-label="Workspace">
-      <RouterLink v-for="item in menuItems" :key="item.to" :to="item.to">
+      <RouterLink v-for="item in menuItems" :key="item.name" :to="{ name: item.name }">
         <el-icon><component :is="item.icon" /></el-icon>
         <span>{{ t(item.labelKey) }}</span>
       </RouterLink>

@@ -32,7 +32,7 @@ const asset = computed(() => demoAssets.find((item) => item.id === Number(route.
         <el-descriptions-item label="Format">PNG / MP4</el-descriptions-item>
         <el-descriptions-item label="License">Royalty-free</el-descriptions-item>
       </el-descriptions>
-      <RouterLink to="/workspace/image-to-video">
+      <RouterLink :to="{ name: 'image-to-video' }">
         <el-button type="primary" class="use-button">{{ t('assets.useAsset') }}</el-button>
       </RouterLink>
     </section>

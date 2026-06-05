@@ -22,7 +22,7 @@ function handleRegister() {
   register({ username: form.username, password: form.password })
     .then((res) => {
       if (res.code === 200) {
-        router.push('/auth/sign-in')
+        router.push({ name: 'sign-in' })
       } else {
         errorMsg.value = res.msg || '注册失败'
       }
@@ -42,7 +42,7 @@ function handleRegister() {
       <h2>{{ t('auth.createTitle') }}</h2>
       <!-- <p>
         {{ t('auth.already') }}
-        <RouterLink to="/auth/sign-in">{{ t('common.signIn') }}</RouterLink>
+        <RouterLink :to="{ name: 'sign-in' }">{{ t('common.signIn') }}</RouterLink>
       </p> -->
 
       <el-alert v-if="errorMsg" :title="errorMsg" type="error" show-icon :closable="false" class="mb-16" />

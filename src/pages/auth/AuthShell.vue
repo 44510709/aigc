@@ -9,7 +9,7 @@ const { t } = useI18n()
 <template>
   <div class="auth-page page">
     <section class="auth-visual">
-      <RouterLink class="auth-logo" to="/">
+      <RouterLink class="auth-logo" :to="{ name: 'home' }">
         <span>{{ t('common.logo') }}</span>
         <strong>{{ t('common.appName') }}</strong>
       </RouterLink>

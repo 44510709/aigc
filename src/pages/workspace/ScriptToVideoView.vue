@@ -5,8 +5,11 @@ import { VideoPlay, Download, Link } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { getMediaList } from '../../api/modules/assets.js'
 import { createScriptVideo, getVideoList, getVideoDetail } from '../../api/modules/video.js'
+import enUS from '../../i18n/locales/en-US.js'
+import zhCN from '../../i18n/locales/zh-CN.js'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
+const LOCALES = { 'en-US': enUS, 'zh-CN': zhCN }
 
 const mediaList = ref([])
 const mediaLoading = ref(false)
@@ -36,23 +39,8 @@ onUnmounted(() => {
   }
 })
 
-const scenesOptions = computed(() => {
-  const val = t('workspace.scenesOptions')
-  if (Array.isArray(val)) return val
-  if (typeof val === 'string') {
-    try { return JSON.parse(val) } catch {}
-  }
-  return ['悉尼歌剧院', '大堡礁', '乌卢鲁', 'Showroom']
-})
-
-const styleOptions = computed(() => {
-  const val = t('workspace.styleOptions')
-  if (Array.isArray(val)) return val
-  if (typeof val === 'string') {
-    try { return JSON.parse(val) } catch {}
-  }
-  return ['休闲', '写实', '越野', '商业', '豪华']
-})
+const scenesOptions = computed(() => LOCALES[locale.value]?.workspace?.scenesOptions ?? [])
+const styleOptions = computed(() => LOCALES[locale.value]?.workspace?.styleOptions ?? [])
 
 const form = reactive({
   title: '',

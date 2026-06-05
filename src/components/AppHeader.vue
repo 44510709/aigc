@@ -7,10 +7,10 @@ import { userStore } from '../stores/user'
 const { t } = useI18n()
 
 const navItems = [
-  { labelKey: 'nav.scriptToVideo', to: '/workspace/script-to-video' },
-  { labelKey: 'nav.imageToVideo', to: '/workspace/image-to-video' },
-  // { labelKey: 'nav.assetLibrary', to: '/workspace/assets' },
-  // { labelKey: 'nav.subjectManagement', to: '/workspace/subjects' },
+  { labelKey: 'nav.scriptToVideo', name: 'script-to-video' },
+  { labelKey: 'nav.imageToVideo', name: 'image-to-video' },
+  // { labelKey: 'nav.assetLibrary', name: 'asset-library' },
+  // { labelKey: 'nav.subjectManagement', name: 'subject-management' },
 ]
 
 function handleLogout() {
@@ -21,13 +21,13 @@ function handleLogout() {
 
 <template>
   <header class="app-header">
-    <RouterLink class="brand" to="/">
+    <RouterLink class="brand" :to="{ name: 'home' }">
       <span class="brand-mark">{{ t('common.logo') }}</span>
       <strong>{{ t('common.appName') }}</strong>
     </RouterLink>
 
     <nav class="top-nav" aria-label="Main">
-      <RouterLink v-for="item in navItems" :key="item.to" :to="item.to">
+      <RouterLink v-for="item in navItems" :key="item.name" :to="{ name: item.name }">
         {{ t(item.labelKey) }}
       </RouterLink>
     </nav>
@@ -38,7 +38,7 @@ function handleLogout() {
         <el-button size="small" @click="handleLogout">{{ t('common.signOut') }}</el-button>
       </template>
       <template v-else>
-        <RouterLink to="/auth/sign-in">{{ t('common.signIn') }}</RouterLink>
+        <RouterLink :to="{ name: 'sign-in' }">{{ t('common.signIn') }}</RouterLink>
         <!-- <RouterLink to="/auth/register">
           <el-button type="primary" size="small">{{ t('common.getStarted') }}</el-button>
         </RouterLink> -->

@@ -12,7 +12,7 @@ const { t } = useI18n()
         <h1>{{ t('subjects.title') }}</h1>
         <p>{{ t('home.assetDesc') }}</p>
       </div>
-      <RouterLink to="/workspace/subjects/new">
+      <RouterLink :to="{ name: 'subject-create' }">
         <el-button type="primary">{{ t('subjects.create') }}</el-button>
       </RouterLink>
     </div>
@@ -22,7 +22,7 @@ const { t } = useI18n()
         v-for="subject in demoSubjects"
         :key="subject.id"
         class="panel subject-card"
-        :to="`/workspace/subjects/${subject.id}`"
+        :to="{ name: 'subject-detail', params: { id: subject.id } }"
       >
         <div class="subject-thumb">{{ subject.name.slice(0, 2).toUpperCase() }}</div>
         <h2>{{ subject.name }}</h2>

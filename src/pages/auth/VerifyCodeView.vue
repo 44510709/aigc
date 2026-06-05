@@ -13,14 +13,14 @@ const form = reactive({ code: '' })
       <h2>{{ t('auth.verifyTitle') }}</h2>
       <!-- <p>
         {{ t('auth.already') }}
-        <RouterLink to="/auth/sign-in">{{ t('common.signIn') }}</RouterLink>
+        <RouterLink :to="{ name: 'sign-in' }">{{ t('common.signIn') }}</RouterLink>
       </p> -->
 
       <el-form label-position="top" :model="form">
         <el-form-item :label="t('auth.verifyCode')">
           <el-input v-model="form.code" maxlength="6" />
         </el-form-item>
-        <RouterLink to="/workspace/image-to-video">
+        <RouterLink :to="{ name: 'image-to-video' }">
           <el-button type="primary" class="full-button">{{ t('auth.confirmCode') }}</el-button>
         </RouterLink>
       </el-form>

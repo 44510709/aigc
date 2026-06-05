@@ -12,7 +12,7 @@ const featureCards = [
     titleKey: 'nav.scriptToVideo',
     descKey: 'home.scriptDesc',
     actionKey: 'home.tryScript',
-    to: '/workspace/script-to-video',
+    name: 'script-to-video',
     tags: ['Multi-scene', 'Style Selection'],
   },
   {
@@ -20,7 +20,7 @@ const featureCards = [
     titleKey: 'nav.imageToVideo',
     descKey: 'home.imageDesc',
     actionKey: 'home.tryImage',
-    to: '/workspace/image-to-video',
+    name: 'image-to-video',
     tags: ['Animation Presets', 'BGM'],
   },
   {
@@ -28,7 +28,7 @@ const featureCards = [
     titleKey: 'nav.assetLibrary',
     descKey: 'home.assetDesc',
     actionKey: 'home.browseAssets',
-    to: '/workspace/assets',
+    name: 'asset-library',
     tags: ['Smart Search', 'One-click Use'],
   },
 ]
@@ -44,10 +44,10 @@ const testimonials = ['Sarah Chen', 'Marcus Rodriguez', 'Emily Johnson']
       <h1>{{ t('home.heroTitle') }}</h1>
       <p>{{ t('home.heroDesc') }}</p>
       <div class="hero-actions">
-        <RouterLink to="/auth/register">
+        <RouterLink :to="{ name: 'register' }">
           <el-button type="primary" size="large">{{ t('common.startFree') }}</el-button>
         </RouterLink>
-        <RouterLink to="/workspace/image-to-video">
+        <RouterLink :to="{ name: 'image-to-video' }">
           <el-button size="large">{{ t('common.watchDemo') }}</el-button>
         </RouterLink>
       </div>
@@ -58,14 +58,14 @@ const testimonials = ['Sarah Chen', 'Marcus Rodriguez', 'Emily Johnson']
     </section>
 
     <section class="features container">
-      <article v-for="card in featureCards" :key="card.to" class="feature-card panel">
+      <article v-for="card in featureCards" :key="card.name" class="feature-card panel">
         <el-icon class="feature-icon"><component :is="card.icon" /></el-icon>
         <h2>{{ t(card.titleKey) }}</h2>
         <p>{{ t(card.descKey) }}</p>
         <div class="tag-row">
           <el-tag v-for="tag in card.tags" :key="tag" effect="plain" round>{{ tag }}</el-tag>
         </div>
-        <RouterLink :to="card.to" class="feature-link">{{ t(card.actionKey) }} -></RouterLink>
+        <RouterLink :to="{ name: card.name }" class="feature-link">{{ t(card.actionKey) }} -></RouterLink>
       </article>
     </section>
 

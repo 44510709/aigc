@@ -7,9 +7,12 @@ import { ElMessage } from 'element-plus'
 import { demoAssets, demoSubjects } from '../../utils/demoData.js'
 import { getMediaList } from '../../api/modules/assets.js'
 import { createImageVideo, getVideoList, getVideoDetail } from '../../api/modules/video.js'
+import enUS from '../../i18n/locales/en-US.js'
+import zhCN from '../../i18n/locales/zh-CN.js'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const router = useRouter()
+const LOCALES = { 'en-US': enUS, 'zh-CN': zhCN }
 
 // 素材列表
 const mediaList = ref([])
@@ -40,31 +43,8 @@ const form = reactive({
   resolution: '720',
 })
 
-const scenesOptions = computed(() => {
-  try {
-    const val = t('workspace.scenesOptions')
-    if (Array.isArray(val)) return val
-    // 如果是 JSON 字符串则解析
-    if (typeof val === 'string') {
-      try { return JSON.parse(val) } catch {}
-    }
-    return ['悉尼歌剧院', '大堡礁', '乌卢鲁', 'Showroom']
-  } catch {
-    return ['悉尼歌剧院', '大堡礁', '乌卢鲁', 'Showroom']
-  }
-})
-const styleOptions = computed(() => {
-  try {
-    const val = t('workspace.styleOptions')
-    if (Array.isArray(val)) return val
-    if (typeof val === 'string') {
-      try { return JSON.parse(val) } catch {}
-    }
-    return ['休闲', '写实', '越野', '商业', '豪华']
-  } catch {
-    return ['休闲', '写实', '越野', '商业', '豪华']
-  }
-})
+const scenesOptions = computed(() => LOCALES[locale.value]?.workspace?.scenesOptions ?? [])
+const styleOptions = computed(() => LOCALES[locale.value]?.workspace?.styleOptions ?? [])
 
 const pageState = ref('empty') // empty | generating | generated
 const previewImage = 'https://images.unsplash.com/photo-1536599018102-9f803c140fc1?auto=format&fit=crop&w=900&q=80'
@@ -226,7 +206,7 @@ function formatTime(isoString) {
 }
 
 function goToHistory() {
-  router.push('/workspace/history')
+  router.push({ name: 'history' })
 }
 
 const uploadHint = computed(() => `JPG/PNG/WebP, Max 20MB`)
