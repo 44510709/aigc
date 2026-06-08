@@ -91,7 +91,15 @@ const testimonials = ['Sarah Chen', 'Marcus Rodriguez', 'Emily Johnson']
             </li>
           </ol>
         </div>
-        <div class="placeholder">{{ t('home.processPlaceholder') }}</div>
+        <video
+          class="process-video"
+          src="https://d.tmpfile.link/public/2026-06-05/de7604fd-db18-49bf-8471-eb14a5c4410f/6月5日.mp4"
+          controls
+          autoplay
+          muted
+          loop
+          playsinline
+        ></video>
       </div>
     </section>
 
@@ -222,6 +230,14 @@ const testimonials = ['Sarah Chen', 'Marcus Rodriguez', 'Emily Johnson']
   grid-template-columns: 1fr 1fr;
   gap: 72px;
   align-items: center;
+}
+
+.process-video {
+  width: 100%;
+  max-height: 360px;
+  border-radius: 8px;
+  background: #000;
+  object-fit: contain;
 }
 
 .steps-list {
