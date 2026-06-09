@@ -33,8 +33,8 @@ function fetchMediaList() {
 
 const form = reactive({
   title: '',
-  image: null,
-  imagePreview: null,
+  images: [],
+  imagePreviews: [],
   assetSource: null,
   subjectSource: null,
   script: '',
@@ -71,7 +71,7 @@ async function generateVideo() {
     ElMessage.warning('请填写标题')
     return
   }
-  if (!form.image && selectedVisualAssets.value.length === 0) {
+  if (form.images.length === 0 && selectedVisualAssets.value.length === 0) {
     ElMessage.warning(t('workspace.uploadImage'))
     return
   }
@@ -88,15 +88,19 @@ async function generateVideo() {
     if (selectedVisualAssets.value.length > 0) {
       payload.materialIds = selectedVisualAssets.value.map(a => a.id)
     }
-    if (form.image) {
-      const uploadRes = await uploadFile(form.image)
-      const url = uploadRes?.data?.url || uploadRes?.data || uploadRes?.url
-      if (!url) {
-        pageState.value = 'empty'
-        ElMessage.error('图片上传失败')
-        return
+    if (form.images.length > 0) {
+      const urls = []
+      for (const file of form.images) {
+        const uploadRes = await uploadFile(file)
+        const url = uploadRes?.data?.url || uploadRes?.data || uploadRes?.url
+        if (!url) {
+          pageState.value = 'empty'
+          ElMessage.error('图片上传失败')
+          return
+        }
+        urls.push(url)
       }
-      payload.imageUrls = [url]
+      payload.imageUrls = urls
     }
 
     const res = await createImageVideo(payload)
@@ -136,7 +140,7 @@ function startPolling(videoId) {
         if (item.status === 2) {
           clearInterval(pollingTimer)
           pollingTimer = null
-          generatedVideoUrl.value = item.videoUrl || form.imagePreview
+          generatedVideoUrl.value = item.videoUrl || form.imagePreviews[0]
           generatedVideoName.value = item.title || form.title
           isPlaying.value = false
           pageState.value = 'generated'
@@ -227,12 +231,17 @@ function handleUpload(uploadFile) {
   if (!rawFile || typeof rawFile.arrayBuffer !== 'function') return
   const reader = new FileReader()
   reader.onload = (e) => {
-    form.imagePreview = e.target.result
-    form.image = rawFile
+    form.imagePreviews.push(e.target.result)
+    form.images.push(rawFile)
     pageState.value = 'hasImage'
   }
   reader.readAsDataURL(rawFile)
   return false
+}
+
+function removeImage(index) {
+  form.images.splice(index, 1)
+  form.imagePreviews.splice(index, 1)
 }
 
 function addAssetToSelection(asset) {
@@ -332,13 +341,19 @@ function appendToScript(text) {
                 :show-file-list="false"
                 :on-change="handleUpload"
                 accept="image/jpeg,image/png,image/webp"
+                multiple
               >
-                <template v-if="!form.imagePreview">
+                <template v-if="form.imagePreviews.length === 0">
                   <el-icon class="el-icon--upload"><UploadFilled /></el-icon>
                   <div class="el-upload__text">{{ t('workspace.uploadHint') }}</div>
                 </template>
                 <template v-else>
-                  <el-image :src="form.imagePreview" fit="contain" style="max-height:160px" />
+                  <div class="image-grid">
+                    <div v-for="(src, i) in form.imagePreviews" :key="i" class="image-thumb">
+                      <el-image :src="src" fit="cover" />
+                      <el-button class="remove-btn" size="small" circle @click.stop="removeImage(i)">×</el-button>
+                    </div>
+                  </div>
                   <div class="el-upload__text">{{ t('workspace.clickReplace') }}</div>
                 </template>
                 <template #tip>
@@ -644,6 +659,38 @@ function appendToScript(text) {
 
 .upload-shell {
   width: 100%;
+}
+
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+  padding: 8px;
+}
+
+.image-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #f4f6fa;
+}
+
+.image-thumb :deep(.el-image) {
+  width: 100%;
+  height: 100%;
+}
+
+.image-thumb .remove-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  font-size: 14px;
+  line-height: 18px;
 }
 
 .form-panel :deep(.el-upload),
