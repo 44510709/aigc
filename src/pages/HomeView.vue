@@ -47,9 +47,6 @@ const testimonials = ['Sarah Chen', 'Marcus Rodriguez', 'Emily Johnson']
         <RouterLink :to="{ name: 'image-to-video' }">
           <el-button type="primary" size="large">{{ t('common.startFree') }}</el-button>
         </RouterLink>
-        <RouterLink :to="{ name: 'image-to-video' }">
-          <el-button size="large">{{ t('common.watchDemo') }}</el-button>
-        </RouterLink>
       </div>
       <div class="hero-preview">
         <el-icon><VideoPlay /></el-icon>
