@@ -48,10 +48,15 @@ const testimonials = ['Sarah Chen', 'Marcus Rodriguez', 'Emily Johnson']
           <el-button type="primary" size="large">{{ t('common.startFree') }}</el-button>
         </RouterLink>
       </div>
-      <div class="hero-preview">
-        <el-icon><VideoPlay /></el-icon>
-        <span>{{ t('home.demoPlaceholder') }}</span>
-      </div>
+      <video
+        class="hero-video"
+        src="https://d.tmpfile.link/public/2026-06-10/0b09bc32-34f3-4bde-95c2-54339d22a3e4/秦PLS.mp4"
+        controls
+        autoplay
+        muted
+        loop
+        playsinline
+      ></video>
     </section>
 
     <section class="features container">
@@ -164,6 +169,15 @@ const testimonials = ['Sarah Chen', 'Marcus Rodriguez', 'Emily Johnson']
   background:
     linear-gradient(135deg, rgb(97 92 237 / 16%), rgb(15 23 42 / 5%)),
     #e8ebf1;
+}
+
+.hero-video {
+  width: 100%;
+  max-width: 960px;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  background: #000;
+  object-fit: contain;
 }
 
 .hero-preview .el-icon {
