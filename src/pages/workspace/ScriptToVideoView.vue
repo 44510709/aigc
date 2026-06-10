@@ -7,9 +7,11 @@ import { getMediaList } from '../../api/modules/assets.js'
 import { createScriptVideo, getVideoList, getVideoDetail } from '../../api/modules/video.js'
 import enUS from '../../i18n/locales/en-US.js'
 import zhCN from '../../i18n/locales/zh-CN.js'
+import { useRouter } from 'vue-router'
 
 const { t, locale } = useI18n()
 const LOCALES = { 'en-US': enUS, 'zh-CN': zhCN }
+const router = useRouter()
 
 const mediaList = ref([])
 const mediaLoading = ref(false)
@@ -85,6 +87,15 @@ function formatTime(isoString) {
   if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`
   if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`
   return `${Math.floor(diff / 86400)}天前`
+}
+
+function onRecentVideoLoaded(e) {
+  const v = e.target
+  if (v && v.currentTime === 0) v.currentTime = 0.5
+}
+
+function goToHistory() {
+  router.push({ name: 'history' })
 }
 
 function adjustDuration(delta) {
@@ -333,9 +344,21 @@ async function handleCopyLink() {
         </section>
 
         <section class="panel recent-section">
-          <h4>{{ t('workspace.recentGenerations') }}</h4>
+          <div class="recent-header">
+            <h4>{{ t('workspace.recentGenerations') }}</h4>
+            <span class="view-more" @click="goToHistory">{{ t('common.viewMore') }} &gt;</span>
+          </div>
           <div v-for="item in recentGenerations" :key="item.id" class="recent-item">
-            <div class="recent-thumb" :class="item.tone"></div>
+            <div v-if="item.url" class="recent-thumb recent-thumb-video">
+              <video
+                :src="item.url"
+                muted
+                playsinline
+                preload="metadata"
+                @loadeddata="onRecentVideoLoaded"
+              ></video>
+            </div>
+            <div v-else class="recent-thumb" :class="item.tone"></div>
             <div class="recent-info">
               <span class="recent-title">{{ item.title }}</span>
               <span class="recent-time">{{ item.time }}</span>
@@ -670,6 +693,23 @@ async function handleCopyLink() {
   font-weight: 750;
 }
 
+.recent-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 21px;
+}
+
+.recent-header h4 {
+  margin: 0;
+}
+
+.view-more {
+  color: #615ced;
+  font-size: 12px;
+  cursor: pointer;
+}
+
 .recent-item {
   display: grid;
   grid-template-columns: 52px minmax(0, 1fr) auto;
@@ -682,7 +722,15 @@ async function handleCopyLink() {
 .recent-thumb {
   width: 52px;
   height: 38px;
+  overflow: hidden;
   border-radius: 6px;
+}
+
+.recent-thumb-video video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #000;
 }
 
 .recent-thumb.pink {
