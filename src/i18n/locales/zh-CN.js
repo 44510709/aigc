@@ -82,7 +82,7 @@ export default {
     promptPlaceholder: '描述画面、动作、氛围和细节...',
     uploadImage: '上传图片',
     uploadHint: '点击或拖拽图片到此处',
-    clickReplace: '点击替换图片',
+    clickReplace: '点击上传图片',
     chooseAsset: '从素材库选择',
     chooseSubject: '从主体库选择',
     style: '风格',

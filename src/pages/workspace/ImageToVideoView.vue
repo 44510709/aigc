@@ -201,10 +201,15 @@ function fetchRecentGenerations() {
         progress: item.status === 2 ? 100 : (item.status === 1 ? 50 : 0),
         status: item.status === 2 ? 'done' : (item.status === 1 ? 'processing' : 'pending'),
         tone: ['pink', 'mint', 'sunset'][item.id % 3],
-        url: item.url,
+        url: item.videoUrl,
       }))
     }
   })
+}
+
+function onRecentVideoLoaded(e) {
+  const v = e.target
+  if (v && v.currentTime === 0) v.currentTime = 0.5
 }
 
 function formatTime(isoString) {
@@ -348,13 +353,16 @@ function appendToScript(text) {
                   <div class="el-upload__text">{{ t('workspace.uploadHint') }}</div>
                 </template>
                 <template v-else>
+                  <div class="upload-actions">
+                    <el-icon class="el-icon--upload"><UploadFilled /></el-icon>
+                    <div class="el-upload__text">{{ t('workspace.clickReplace') }}</div>
+                  </div>
                   <div class="image-grid">
                     <div v-for="(src, i) in form.imagePreviews" :key="i" class="image-thumb">
                       <el-image :src="src" fit="cover" />
                       <el-button class="remove-btn" size="small" circle @click.stop="removeImage(i)">×</el-button>
                     </div>
                   </div>
-                  <div class="el-upload__text">{{ t('workspace.clickReplace') }}</div>
                 </template>
                 <template #tip>
                   <div class="el-upload__tip">{{ uploadHint }}</div>
@@ -531,7 +539,16 @@ function appendToScript(text) {
             :key="item.id"
             class="recent-item"
           >
-            <div class="recent-thumb" :class="item.tone"></div>
+            <div v-if="item.url" class="recent-thumb recent-thumb-video">
+              <video
+                :src="item.url"
+                muted
+                playsinline
+                preload="metadata"
+                @loadeddata="onRecentVideoLoaded"
+              ></video>
+            </div>
+            <div v-else class="recent-thumb" :class="item.tone"></div>
             <div class="recent-info">
               <span class="recent-title">{{ item.title }}</span>
               <span class="recent-time">{{ item.time }}</span>
@@ -666,6 +683,15 @@ function appendToScript(text) {
   grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
   gap: 8px;
   padding: 8px;
+}
+
+.upload-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 4px 8px;
+  color: #615ced;
 }
 
 .image-thumb {
@@ -1064,7 +1090,15 @@ function appendToScript(text) {
 .recent-thumb {
   width: 52px;
   height: 38px;
+  overflow: hidden;
   border-radius: 6px;
+}
+
+.recent-thumb-video video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #000;
 }
 
 .recent-thumb.pink {
