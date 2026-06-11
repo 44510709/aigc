@@ -87,6 +87,7 @@ function handleLogout() {
   gap: 28px;
   color: #4b5565;
   font-size: 14px;
+  font-weight: 600;
 }
 
 .top-nav a.router-link-active,

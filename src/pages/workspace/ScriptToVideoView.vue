@@ -378,7 +378,6 @@ async function handleCopyLink() {
   display: grid;
   gap: 24px;
   width: 100%;
-  max-width: 1120px;
 }
 
 .page-heading {
@@ -780,10 +779,6 @@ async function handleCopyLink() {
 }
 
 @media (max-width: 1040px) {
-  .workspace-page {
-    max-width: 760px;
-  }
-
   .creation-grid {
     grid-template-columns: 1fr;
   }
