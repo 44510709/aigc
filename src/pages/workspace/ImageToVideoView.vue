@@ -227,13 +227,18 @@ function goToHistory() {
   router.push({ name: 'history' })
 }
 
-const uploadHint = computed(() => `JPG/PNG/WebP, Max 20MB`)
+const MAX_IMAGES = 9
+const uploadHint = computed(() => t('workspace.uploadTip'))
 const maxChars = 2000
 const scriptCharCount = computed(() => form.script.length)
 
 function handleUpload(uploadFile) {
   const rawFile = uploadFile.raw
   if (!rawFile || typeof rawFile.arrayBuffer !== 'function') return
+  if (form.imagePreviews.length >= MAX_IMAGES) {
+    ElMessage.warning(t('workspace.maxImagesExceeded'))
+    return false
+  }
   const reader = new FileReader()
   reader.onload = (e) => {
     form.imagePreviews.push(e.target.result)
@@ -468,14 +473,14 @@ function appendToScript(text) {
               <el-slider
                 v-model="form.duration"
                 :min="3"
-                :max="30"
+                :max="15"
                 :step="1"
                 :format-tooltip="formatDuration"
               />
             </el-form-item>
             <div class="slider-labels">
               <span>3s</span>
-              <span>30s</span>
+              <span>15s</span>
             </div>
           </div>
 

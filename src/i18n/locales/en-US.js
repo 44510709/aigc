@@ -81,6 +81,8 @@ export default {
     promptPlaceholder: 'Describe the scene, movement, mood, and details...',
     uploadImage: 'Upload image',
     uploadHint: 'Click or drag image here',
+    uploadTip: 'JPG/PNG/WebP, Max 20MB, Max 9 images to upload.',
+    maxImagesExceeded: 'Sorry, maximum 9 images allowed.',
     clickReplace: 'Click to replace image',
     chooseAsset: 'Choose from Assets',
     chooseSubject: 'Choose from Subjects',
