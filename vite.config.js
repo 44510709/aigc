@@ -20,7 +20,7 @@ export default defineConfig({
   ],
   server: {
     proxy: {
-      '/aigc': {
+      '/aigc/api': {
         target: 'http://koc.sur-power.com',
         changeOrigin: true,
       },

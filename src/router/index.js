@@ -32,6 +32,11 @@ const routes = [
         component: () => import('../pages/workspace/ImageToVideoView.vue'),
       },
       {
+        path: 'text-to-image',
+        name: 'text-to-image',
+        component: () => import('../pages/workspace/TextToImageView.vue'),
+      },
+      {
         path: 'script-to-video',
         name: 'script-to-video',
         component: () => import('../pages/workspace/ScriptToVideoView.vue'),

@@ -6,6 +6,7 @@ import {
   FolderOpened,
   House,
   Picture,
+  PictureFilled,
   User,
 } from '@element-plus/icons-vue'
 
@@ -14,6 +15,7 @@ const { t } = useI18n()
 const menuItems = [
   { labelKey: 'nav.home', name: 'home', icon: House },
   { labelKey: 'nav.imageToVideo', name: 'image-to-video', icon: Picture },
+  { labelKey: 'nav.textToImage', name: 'text-to-image', icon: PictureFilled },
   { labelKey: 'nav.scriptToVideo', name: 'script-to-video', icon: Film },
   { labelKey: 'nav.assetLibrary', name: 'asset-library', icon: FolderOpened },
   // { labelKey: 'nav.subjectManagement', name: 'subject-management', icon: User },

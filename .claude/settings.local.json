@@ -44,7 +44,10 @@
       "Bash(rtk git *)",
       "Bash(git -C /Users/wyz/Downloads/zhuoli/AIGC check-ignore -v src/pages/workspace/ImageToVideoView.vue src/router/index.js)",
       "Bash(md5 *)",
-      "Bash(git diff-index *)"
+      "Bash(git diff-index *)",
+      "Bash(rtk find *)",
+      "Bash(rtk npx *)",
+      "mcp__chrome-devtools__list_console_messages"
     ]
   }
 }
