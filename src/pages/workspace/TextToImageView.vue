@@ -188,10 +188,6 @@ async function generateImages() {
       size: form.resolution,
       maxImages: form.count,
     }
-    if (form.resolution === 'custom') {
-      payload.width = form.customWidth
-      payload.height = form.customHeight
-    }
     if (form.images.length > 0) {
       const urls = []
       for (const file of form.images) {
@@ -456,28 +452,7 @@ onUnmounted(() => {
               <el-radio-group v-model="form.resolution" @change="onResolutionChange">
                 <el-radio-button value="2K">{{ t('workspace.resolution2K') }}</el-radio-button>
                 <el-radio-button value="4K">{{ t('workspace.resolution4K') }}</el-radio-button>
-                <el-radio-button value="custom">{{ t('workspace.resolutionCustom') }}</el-radio-button>
               </el-radio-group>
-              <div class="resolution-size">
-                <el-input-number
-                  v-model="form.customWidth"
-                  :min="256"
-                  :max="8192"
-                  :step="64"
-                  size="small"
-                  controls-position="right"
-                />
-                <span class="size-x">×</span>
-                <el-input-number
-                  v-model="form.customHeight"
-                  :min="256"
-                  :max="8192"
-                  :step="64"
-                  size="small"
-                  controls-position="right"
-                />
-                <span class="size-unit">px</span>
-              </div>
             </el-form-item>
 
             <el-form-item :label="t('workspace.aspectRatio')">
