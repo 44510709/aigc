@@ -7,6 +7,7 @@ import { userStore } from '../stores/user'
 const { t } = useI18n()
 
 const navItems = [
+  { labelKey: 'nav.textToImage', name: 'text-to-image' },
   { labelKey: 'nav.scriptToVideo', name: 'script-to-video' },
   { labelKey: 'nav.imageToVideo', name: 'image-to-video' },
   // { labelKey: 'nav.assetLibrary', name: 'asset-library' },

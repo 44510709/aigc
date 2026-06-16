@@ -1,12 +1,20 @@
 <script setup>
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
-import { Box, Film, Picture, VideoPlay } from '@element-plus/icons-vue'
+import { Box, Film, Picture, PictureFilled, VideoPlay } from '@element-plus/icons-vue'
 import AppHeader from '../components/AppHeader.vue'
 
 const { t } = useI18n()
 
 const featureCards = [
+  {
+    icon: PictureFilled,
+    titleKey: 'nav.textToImage',
+    descKey: 'home.textToImageDesc',
+    actionKey: 'home.tryTextToImage',
+    name: 'text-to-image',
+    tags: ['2K / 4K', '1-4 Images'],
+  },
   {
     icon: Film,
     titleKey: 'nav.scriptToVideo',
