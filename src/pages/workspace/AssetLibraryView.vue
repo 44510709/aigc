@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Plus, Delete } from '@element-plus/icons-vue'
+import { Plus, Delete, Upload } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { getMediaList, createMedia, deleteMedia, uploadFile } from '../../api/modules/assets.js'
 
@@ -47,18 +47,18 @@ function openCreateDialog() {
   dialogVisible.value = true
 }
 
-function handleFileChange(e) {
-  const file = e.target.files?.[0]
+function handleFileChange(uploadFileObj) {
+  const file = uploadFileObj?.raw
   if (!file) return
   form.value._file = file
-  form.value.name = file.name.replace(/\.[^.]+$/, '')
+  if (!form.value.name) form.value.name = file.name.replace(/\.[^.]+$/, '')
   uploadLoading.value = true
   uploadFile(file).then(res => {
     if ((res.code === 0 || res.code === 200) && res.data) {
       form.value.url = typeof res.data === 'string' ? res.data : res.data.url
-      ElMessage.success('上传成功')
+      ElMessage.success(t('assets.uploadSuccess'))
     } else {
-      ElMessage.error('上传失败')
+      ElMessage.error(t('assets.uploadFailed'))
     }
   }).finally(() => {
     uploadLoading.value = false
@@ -67,7 +67,7 @@ function handleFileChange(e) {
 
 function handleCreate() {
   if (!form.value.name || !form.value.url) {
-    ElMessage.warning('请填写素材名称并上传图片')
+    ElMessage.warning(t('assets.fillNameAndUpload'))
     return
   }
   uploadLoading.value = true
@@ -79,9 +79,9 @@ function handleCreate() {
     fileSize: form.value._file?.size || 0,
   }).then(res => {
     if ((res.code === 0 || res.code === 200) && res.data) {
-      mediaList.value.unshift(res.data)
       dialogVisible.value = false
-      ElMessage.success('创建成功')
+      fetchMediaList()
+      ElMessage.success(t('assets.createSuccess'))
     }
   }).finally(() => {
     uploadLoading.value = false
@@ -130,8 +130,18 @@ onMounted(() => {
     <el-dialog v-model="dialogVisible" :title="t('common.create')" width="480px">
       <el-form :model="form" label-width="80px">
         <el-form-item :label="t('assets.select')">
-          <input type="file" accept="image/*" @change="handleFileChange" />
-          <div v-if="form._file" style="margin-top:8px;color:#667085;font-size:12px">已选择: {{ form._file.name }}</div>
+          <el-upload
+            action="#"
+            :auto-upload="false"
+            :show-file-list="false"
+            :on-change="handleFileChange"
+            accept="image/*"
+          >
+            <el-button :icon="Upload" :loading="uploadLoading">
+              {{ form._file ? t('assets.replace') : t('assets.select') }}
+            </el-button>
+          </el-upload>
+          <div v-if="form._file" style="margin-top:8px;color:#667085;font-size:12px">{{ form._file.name }}</div>
         </el-form-item>
         <el-form-item :label="t('assets.name')" required>
           <el-input v-model="form.name" :placeholder="t('assets.namePlaceholder')" />
