@@ -31,14 +31,14 @@ const featureCards = [
     name: 'image-to-video',
     tags: ['Animation Presets', 'BGM'],
   },
-  {
-    icon: Box,
-    titleKey: 'nav.assetLibrary',
-    descKey: 'home.assetDesc',
-    actionKey: 'home.browseAssets',
-    name: 'asset-library',
-    tags: ['Smart Search', 'One-click Use'],
-  },
+  // {
+  //   icon: Box,
+  //   titleKey: 'nav.assetLibrary',
+  //   descKey: 'home.assetDesc',
+  //   actionKey: 'home.browseAssets',
+  //   name: 'asset-library',
+  //   tags: ['Smart Search', 'One-click Use'],
+  // },
 ]
 
 const testimonials = ['Sarah Chen', 'Marcus Rodriguez', 'Emily Johnson']
