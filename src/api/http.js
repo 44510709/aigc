@@ -21,7 +21,15 @@ http.interceptors.request.use((config) => {
 
 http.interceptors.response.use(
   (response) => response.data,
-  (error) => Promise.reject(error),
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('aigc_token')
+      if (!window.location.pathname.includes('/auth/')) {
+        window.location.href = '/aigc/auth/sign-in'
+      }
+    }
+    return Promise.reject(error)
+  },
 )
 
 export default http

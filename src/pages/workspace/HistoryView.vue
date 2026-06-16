@@ -1,33 +1,85 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { VideoPlay, Delete, Download, Link } from '@element-plus/icons-vue'
+import { VideoPlay, Picture as PictureIcon, Delete, Download, Link } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { getVideoList } from '../../api/modules/video.js'
+import { getImageList } from '../../api/modules/image.js'
 
 const { t } = useI18n()
 
 const historyItems = ref([])
 const loading = ref(false)
 const playDialogVisible = ref(false)
-const currentVideoUrl = ref('')
+const currentMedia = ref(null) // { urls, index, kind, title }
+const previewIndex = ref(0)
+const activeTab = ref('all') // 'all' | 'image' | 'video'
+
+const filteredItems = computed(() => {
+  if (activeTab.value === 'image') return historyItems.value.filter(i => i.kind === 'image')
+  if (activeTab.value === 'video') return historyItems.value.filter(i => i.kind === 'video')
+  return historyItems.value
+})
+
+const TASK_TYPE = {
+  IMAGE_TO_VIDEO: 1,
+  SCRIPT_TO_VIDEO: 2,
+  TEXT_TO_IMAGE: 3,
+}
+
+function parseUrls(field) {
+  if (!field || typeof field !== 'string') return []
+  return Array.from(new Set(field.split(',').map(s => s.trim()).filter(Boolean)))
+}
+
+function extractMedia(item) {
+  if (item.taskType === TASK_TYPE.TEXT_TO_IMAGE) {
+    // 图片：internalVideoUrl 优先（可能多张），videoUrl 兜底
+    return parseUrls(item.internalVideoUrl).concat(parseUrls(item.videoUrl))
+  }
+  // 视频：取一条
+  const url = item.internalVideoUrl || item.videoUrl || ''
+  return url ? [url] : []
+}
+
+function kindForTaskType(taskType) {
+  if (taskType === TASK_TYPE.TEXT_TO_IMAGE) return 'image'
+  return 'video'
+}
+
+function typeKeyForTaskType(taskType) {
+  if (taskType === TASK_TYPE.IMAGE_TO_VIDEO) return 'imageToVideo'
+  if (taskType === TASK_TYPE.SCRIPT_TO_VIDEO) return 'scriptToVideo'
+  if (taskType === TASK_TYPE.TEXT_TO_IMAGE) return 'textToImage'
+  return 'unknown'
+}
 
 function fetchHistory() {
   loading.value = true
-  getVideoList({ pageSize: 100 })
-    .then(res => {
-      if ((res.code === 0 || res.code === 200) && res.data?.rows) {
-        historyItems.value = res.data.rows.map(item => ({
-          id: item.id,
+  getImageList({ pageSize: 100 })
+    .then((res) => {
+      if (!((res.code === 0 || res.code === 200) && res.data?.rows)) {
+        historyItems.value = []
+        return
+      }
+      const items = res.data.rows.map((item) => {
+        const urls = extractMedia(item)
+        const kind = kindForTaskType(item.taskType)
+        return {
+          id: `task-${item.id}`,
+          rawId: item.id,
+          kind,
+          typeKey: typeKeyForTaskType(item.taskType),
           title: item.title,
-          type: item.taskType === 1 ? 'Image to Video' : 'Script to Video',
-          time: item.createTime ? formatTime(item.createTime) : '',
+          time: item.createTime || '',
           progress: item.status === 2 ? 100 : (item.status === 1 ? 50 : 0),
           status: item.status === 2 ? 'done' : (item.status === 1 ? 'processing' : 'pending'),
           tone: ['pink', 'mint', 'sunset', 'sky', 'purple'][item.id % 5],
-          url: item.videoUrl,
-        }))
-      }
+          urls,
+          url: urls[0] || '',
+        }
+      })
+      items.sort((a, b) => new Date(b.time) - new Date(a.time))
+      historyItems.value = items
     })
     .finally(() => {
       loading.value = false
@@ -45,17 +97,31 @@ function formatTime(isoString) {
   return `${Math.floor(diff / 86400)}天前`
 }
 
-function playVideo(url) {
-  if (!url) return
-  currentVideoUrl.value = url
+function previewMedia(item) {
+  if (!item.urls?.length) return
+  previewIndex.value = 0
+  currentMedia.value = { urls: item.urls, kind: item.kind, title: item.title }
   playDialogVisible.value = true
 }
 
-function downloadVideo(item) {
+function previewPrev() {
+  if (!currentMedia.value?.urls?.length) return
+  const len = currentMedia.value.urls.length
+  previewIndex.value = (previewIndex.value - 1 + len) % len
+}
+
+function previewNext() {
+  if (!currentMedia.value?.urls?.length) return
+  const len = currentMedia.value.urls.length
+  previewIndex.value = (previewIndex.value + 1) % len
+}
+
+function downloadMedia(item) {
   if (!item.url) return
+  const ext = item.kind === 'image' ? 'png' : 'mp4'
   const link = document.createElement('a')
   link.href = item.url
-  link.download = item.title + '.mp4'
+  link.download = item.title + '.' + ext
   link.click()
 }
 
@@ -63,7 +129,7 @@ async function copyLink(url) {
   if (!url) return
   try {
     await navigator.clipboard.writeText(url)
-    ElMessage.success('链接已复制')
+    ElMessage.success(t('workspace.msg.linkCopied'))
   } catch {
     const textarea = document.createElement('textarea')
     textarea.value = url
@@ -73,12 +139,16 @@ async function copyLink(url) {
     textarea.select()
     document.execCommand('copy')
     document.body.removeChild(textarea)
-    ElMessage.success('链接已复制')
+    ElMessage.success(t('workspace.msg.linkCopied'))
   }
 }
 
 function deleteItem(id) {
   historyItems.value = historyItems.value.filter(item => item.id !== id)
+}
+
+function typeLabel(typeKey) {
+  return t(`workspace.historyType.${typeKey}`)
 }
 
 onMounted(() => {
@@ -96,22 +166,38 @@ onMounted(() => {
     </div>
 
     <section class="panel history-panel" v-loading="loading">
-      <h3>{{ t('workspace.recentGenerations') }}</h3>
+      <div class="history-panel-header">
+        <h3>{{ t('workspace.recentGenerations') }}</h3>
+        <el-radio-group v-model="activeTab" size="small">
+          <el-radio-button value="all">{{ t('history.tabAll') }}</el-radio-button>
+          <el-radio-button value="image">{{ t('history.tabImage') }}</el-radio-button>
+          <el-radio-button value="video">{{ t('history.tabVideo') }}</el-radio-button>
+        </el-radio-group>
+      </div>
       <div class="history-grid">
-        <div v-for="item in historyItems" :key="item.id" class="history-card">
-          <div class="history-thumb" :class="item.tone">
+        <div v-for="item in filteredItems" :key="item.id" class="history-card">
+          <div
+            class="history-thumb"
+            :class="[item.tone, { image: item.kind === 'image', video: item.kind === 'video' }]"
+          >
             <video
-              v-if="item.status === 'done' && item.url"
+              v-if="item.kind === 'video' && item.status === 'done' && item.url"
               :src="item.url"
-              class="history-video"
+              class="history-media"
+            />
+            <img
+              v-else-if="item.kind === 'image' && item.status === 'done' && item.url"
+              :src="item.url"
+              class="history-media"
+              :alt="item.title"
             />
             <div v-else class="generating-overlay">
               <el-icon class="is-loading"><VideoPlay /></el-icon>
               <span>{{ item.progress }}%</span>
             </div>
             <div v-if="item.status === 'done' && item.url" class="thumb-actions">
-              <el-button size="small" :icon="VideoPlay" circle @click="playVideo(item.url)" />
-              <el-button size="small" :icon="Download" circle @click="downloadVideo(item)" />
+              <el-button size="small" :icon="item.kind === 'image' ? PictureIcon : VideoPlay" circle @click="previewMedia(item)" />
+              <el-button size="small" :icon="Download" circle @click="downloadMedia(item)" />
               <el-button size="small" :icon="Link" circle @click="copyLink(item.url)" />
             </div>
             <button class="delete-btn" @click="deleteItem(item.id)">
@@ -126,8 +212,8 @@ onMounted(() => {
               </span>
             </div>
             <div class="history-meta">
-              <span class="history-type">{{ item.type }}</span>
-              <span class="history-time">{{ item.time }}</span>
+              <span class="history-type" :class="`type-${item.kind}`">{{ typeLabel(item.typeKey) }}</span>
+              <span class="history-time">{{ formatTime(item.time) }}</span>
             </div>
           </div>
         </div>
@@ -138,8 +224,37 @@ onMounted(() => {
       </div>
     </section>
 
-    <el-dialog v-model="playDialogVisible" title="视频播放" width="720px">
-      <video v-if="currentVideoUrl" :src="currentVideoUrl" controls style="width:100%" />
+    <el-dialog
+      v-model="playDialogVisible"
+      :title="currentMedia?.kind === 'image' ? t('history.imagePreview') : t('history.videoPlay')"
+      width="720px"
+    >
+      <video
+        v-if="currentMedia?.kind === 'video'"
+        :src="currentMedia.urls[0]"
+        controls
+        style="width:100%"
+      />
+      <div v-else-if="currentMedia?.kind === 'image'" class="preview-image-wrap">
+        <img
+          :src="currentMedia.urls[previewIndex]"
+          :alt="currentMedia.title"
+          class="preview-image"
+        />
+        <button
+          v-if="currentMedia.urls.length > 1"
+          class="preview-nav preview-prev"
+          @click="previewPrev"
+        >‹</button>
+        <button
+          v-if="currentMedia.urls.length > 1"
+          class="preview-nav preview-next"
+          @click="previewNext"
+        >›</button>
+        <div v-if="currentMedia.urls.length > 1" class="preview-counter">
+          {{ previewIndex + 1 }} / {{ currentMedia.urls.length }}
+        </div>
+      </div>
     </el-dialog>
   </div>
 </template>
@@ -204,6 +319,10 @@ onMounted(() => {
   position: relative;
   aspect-ratio: 16 / 9;
   overflow: hidden;
+}
+
+.history-thumb.image {
+  aspect-ratio: 1 / 1;
 }
 
 .history-thumb img,
@@ -333,6 +452,65 @@ onMounted(() => {
   text-align: center;
   padding: 40px;
   color: #667085;
+}
+
+.preview-image-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0f1116;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.preview-image {
+  display: block;
+  max-width: 100%;
+  max-height: 70vh;
+  margin: 0 auto;
+}
+
+.preview-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-nav:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.preview-prev {
+  left: 12px;
+}
+
+.preview-next {
+  right: 12px;
+}
+
+.preview-counter {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
 }
 
 @media (max-width: 1040px) {

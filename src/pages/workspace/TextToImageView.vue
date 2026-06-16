@@ -33,7 +33,7 @@ const form = reactive({
   count: 1,
 })
 
-const MAX_IMAGES = 15
+const MAX_IMAGES = 4
 const MIN_COUNT = 1
 const MAX_COUNT = 4
 
@@ -181,14 +181,16 @@ async function generateImages() {
   pageState.value = 'generating'
 
   try {
+    const finalPrompt = `${form.prompt}${t('workspace.promptCountSuffix', { count: form.count })}`
     const payload = {
       title: form.title,
-      prompt: form.prompt,
-      resolution: form.resolution,
-      width: form.customWidth,
-      height: form.customHeight,
-      aspectRatio: form.aspectRatio,
-      count: form.count,
+      prompt: finalPrompt,
+      size: form.resolution,
+      maxImages: form.count,
+    }
+    if (form.resolution === 'custom') {
+      payload.width = form.customWidth
+      payload.height = form.customHeight
     }
     if (form.images.length > 0) {
       const urls = []
@@ -202,7 +204,7 @@ async function generateImages() {
         }
         urls.push(url)
       }
-      payload.referenceUrls = urls
+      payload.imageUrls = urls
     }
 
     const res = await createTextToImage(payload)
@@ -245,9 +247,9 @@ function startPolling(taskId) {
         if (item.status === 2) {
           clearInterval(pollingTimer)
           pollingTimer = null
-          const urls = Array.isArray(item.imageUrls)
-            ? item.imageUrls
-            : (item.imageUrl ? [item.imageUrl] : [])
+          // 优先 internalVideoUrl（多张逗号分隔），兜底 videoUrl
+          const raw = item.internalVideoUrl || item.videoUrl || ''
+          const urls = raw.split(',').map(s => s.trim()).filter(Boolean)
           if (urls.length > 0) finishWithUrls(urls, item.title || form.title)
           else { pageState.value = 'empty'; ElMessage.error(t('workspace.msg.noImageUrl')) }
         } else if (item.status === 3) {
@@ -303,17 +305,25 @@ async function handleCopyLink() {
 // recent generations
 const recentGenerations = ref([])
 function fetchRecentGenerations() {
-  getImageList({ pageSize: 10 }).then(res => {
+  getImageList({ pageSize: 50 }).then(res => {
     if ((res.code === 0 || res.code === 200) && res.data?.rows) {
-      recentGenerations.value = res.data.rows.map(item => ({
-        id: item.id,
-        title: item.title,
-        time: item.createTime ? formatTime(item.createTime) : '',
-        progress: item.status === 2 ? 100 : (item.status === 1 ? 50 : 0),
-        status: item.status === 2 ? 'done' : (item.status === 1 ? 'processing' : 'pending'),
-        tone: ['pink', 'mint', 'sunset'][item.id % 3],
-        url: item.imageUrl || (Array.isArray(item.imageUrls) ? item.imageUrls[0] : ''),
-      }))
+      recentGenerations.value = res.data.rows
+        .filter(item => item.taskType === 3)
+        .slice(0, 10)
+        .map(item => {
+          const urls = (item.internalVideoUrl || item.videoUrl || '')
+            .split(',').map(s => s.trim()).filter(Boolean)
+          return {
+            id: item.id,
+            title: item.title,
+            time: item.createTime ? formatTime(item.createTime) : '',
+            progress: item.status === 2 ? 100 : (item.status === 1 ? 50 : 0),
+            status: item.status === 2 ? 'done' : (item.status === 1 ? 'processing' : 'pending'),
+            tone: ['pink', 'mint', 'sunset'][item.id % 3],
+            url: urls[0] || '',
+            urls,
+          }
+        })
     }
   })
 }

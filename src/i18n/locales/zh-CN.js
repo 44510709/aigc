@@ -99,7 +99,8 @@ export default {
     textToImageSubtitle: '用 AI 将文字描述转换为精美图片',
     referenceImages: '参考图片',
     referenceImagesHint: '拖拽图片到此处',
-    referenceImagesTip: '支持上传最多 15 张图片，JPG/PNG 格式',
+    referenceImagesTip: '支持上传最多 4 张图片，JPG/PNG 格式',
+    promptCountSuffix: '，生成 {count} 张',
     resolution: '分辨率',
     resolution2K: '2K',
     resolution4K: '4K',
@@ -141,6 +142,11 @@ export default {
     recentGenerations: '最近生成',
     scenesOptions: ['悉尼歌剧院', '大堡礁', '乌卢鲁', 'Showroom'],
     styleOptions: ['休闲', '写实', '越野', '商业', '豪华'],
+    historyType: {
+      textToImage: '文生图',
+      imageToVideo: '图生视频',
+      scriptToVideo: '脚本生视频',
+    },
   },
   assets: {
     title: '素材库',
@@ -171,5 +177,10 @@ export default {
     title: '历史',
     subtitle: '查看过往生成记录，并继续编辑。',
     empty: '暂无生成历史。',
+    imagePreview: '图片预览',
+    videoPlay: '视频播放',
+    tabAll: '全部',
+    tabImage: '图片',
+    tabVideo: '视频',
   },
 }

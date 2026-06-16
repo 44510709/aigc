@@ -63,17 +63,20 @@ const showResult = computed(() => pageState.value === 'generated' && generatedVi
 const recentGenerations = ref([])
 
 function fetchRecentGenerations() {
-  getVideoList({ pageSize: 10 }).then(res => {
+  getVideoList({ pageSize: 50 }).then(res => {
     if ((res.code === 0 || res.code === 200) && res.data?.rows) {
-      recentGenerations.value = res.data.rows.map(item => ({
-        id: item.id,
-        title: item.title,
-        time: item.createTime ? formatTime(item.createTime) : '',
-        progress: item.status === 2 ? 100 : (item.status === 1 ? 50 : 0),
-        status: item.status === 2 ? 'done' : (item.status === 1 ? 'processing' : 'pending'),
-        tone: ['pink', 'mint', 'sunset'][item.id % 3],
-        url: item.videoUrl,
-      }))
+      recentGenerations.value = res.data.rows
+        .filter(item => item.taskType === 2)
+        .slice(0, 10)
+        .map(item => ({
+          id: item.id,
+          title: item.title,
+          time: item.createTime ? formatTime(item.createTime) : '',
+          progress: item.status === 2 ? 100 : (item.status === 1 ? 50 : 0),
+          status: item.status === 2 ? 'done' : (item.status === 1 ? 'processing' : 'pending'),
+          tone: ['pink', 'mint', 'sunset'][item.id % 3],
+          url: item.videoUrl,
+        }))
     }
   })
 }

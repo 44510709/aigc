@@ -98,7 +98,8 @@ export default {
     textToImageSubtitle: 'Transform your text descriptions into beautiful images with AI-powered generation',
     referenceImages: 'Reference Images',
     referenceImagesHint: 'Drag & drop images here',
-    referenceImagesTip: 'Support up to 15 images, JPG/PNG format',
+    referenceImagesTip: 'Support up to 4 images, JPG/PNG format',
+    promptCountSuffix: ', generate {count} images',
     resolution2K: '2K',
     resolution4K: '4K',
     resolutionCustom: 'Custom',
@@ -140,6 +141,11 @@ export default {
     recentGenerations: 'Recent Generations',
     scenesOptions: ['Sydney Opera House', 'Great Barrier Reef', 'Uluru', 'Showroom'],
     styleOptions: ['leisure', 'realistic', 'off-road', 'Commercial', 'Luxury'],
+    historyType: {
+      textToImage: 'Text to Image',
+      imageToVideo: 'Image to Video',
+      scriptToVideo: 'Script to Video',
+    },
   },
   assets: {
     title: 'Asset Library',
@@ -170,5 +176,10 @@ export default {
     title: 'History',
     subtitle: 'Review previous generations and continue editing.',
     empty: 'No generation history yet.',
+    imagePreview: 'Image Preview',
+    videoPlay: 'Video Playback',
+    tabAll: 'All',
+    tabImage: 'Images',
+    tabVideo: 'Videos',
   },
 }

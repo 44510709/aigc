@@ -47,7 +47,11 @@
       "Bash(git diff-index *)",
       "Bash(rtk find *)",
       "Bash(rtk npx *)",
-      "mcp__chrome-devtools__list_console_messages"
+      "mcp__chrome-devtools__list_console_messages",
+      "Bash(curl -s -o /dev/null -w \"URL: %{url_effective}\\\\nHTTP: %{http_code}\\\\nMethod: %{method}\\\\n\" -X POST http://koc.sur-power.com/aigc/api/common/file/upload)",
+      "Bash(curl -s -o /dev/null -w \"URL: %{url_effective}\\\\nHTTP: %{http_code}\\\\nMethod: %{method}\\\\n\" -X POST http://koc.sur-power.com/api/common/file/upload)",
+      "Bash(curl -s -o /dev/null -w \"HTTP: %{http_code}\\\\n\" -X POST http://koc.sur-power.com/aigc/api/pc/video/generate)",
+      "Bash(curl -s -o /dev/null -w \"HTTP: %{http_code}\\\\n\" -X POST http://koc.sur-power.com/pc/video/generate)"
     ]
   }
 }
