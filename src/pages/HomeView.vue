@@ -58,7 +58,7 @@ const testimonials = ['Sarah Chen', 'Marcus Rodriguez', 'Emily Johnson']
       </div>
       <video
         class="hero-video"
-        src="https://d.tmpfile.link/public/2026-06-10/0b09bc32-34f3-4bde-95c2-54339d22a3e4/秦PLS.mp4"
+        src="https://mazda-zhuolixin.oss-cn-beijing.aliyuncs.com/aigc_show/1.mp4"
         controls
         autoplay
         muted
@@ -103,7 +103,7 @@ const testimonials = ['Sarah Chen', 'Marcus Rodriguez', 'Emily Johnson']
         </div>
         <video
           class="process-video"
-          src="https://d.tmpfile.link/public/2026-06-05/de7604fd-db18-49bf-8471-eb14a5c4410f/6月5日.mp4"
+          src="https://mazda-zhuolixin.oss-cn-beijing.aliyuncs.com/aigc_show/2.mp4"
           controls
           autoplay
           muted

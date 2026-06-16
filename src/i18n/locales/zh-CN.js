@@ -189,5 +189,7 @@ export default {
     tabAll: '全部',
     tabImage: '图片',
     tabVideo: '视频',
+    deleteTitle: '删除',
+    deleteConfirm: '确定要删除这条记录吗？',
   },
 }

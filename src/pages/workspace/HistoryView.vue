@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { VideoPlay, Picture as PictureIcon, Delete, Download, Link } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { getImageList } from '../../api/modules/image.js'
 
 const { t } = useI18n()
@@ -149,8 +149,21 @@ async function copyLink(url) {
   }
 }
 
-function deleteItem(id) {
-  historyItems.value = historyItems.value.filter(item => item.id !== id)
+async function deleteItem(item) {
+  try {
+    await ElMessageBox.confirm(
+      t('history.deleteConfirm'),
+      t('history.deleteTitle'),
+      {
+        type: 'warning',
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
+      }
+    )
+  } catch {
+    return
+  }
+  historyItems.value = historyItems.value.filter(i => i.id !== item.id)
 }
 
 function typeLabel(typeKey) {
@@ -206,9 +219,6 @@ onMounted(() => {
               <el-button size="small" :icon="Download" circle @click="downloadMedia(item)" />
               <el-button size="small" :icon="Link" circle @click="copyLink(item.url)" />
             </div>
-            <button class="delete-btn" @click="deleteItem(item.id)">
-              <el-icon><Delete /></el-icon>
-            </button>
           </div>
           <div class="history-info">
             <div class="history-header">

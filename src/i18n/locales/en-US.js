@@ -188,5 +188,7 @@ export default {
     tabAll: 'All',
     tabImage: 'Images',
     tabVideo: 'Videos',
+    deleteTitle: 'Delete',
+    deleteConfirm: 'Are you sure you want to delete this item?',
   },
 }
