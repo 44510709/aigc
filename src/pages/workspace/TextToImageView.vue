@@ -304,11 +304,12 @@ async function handleCopyLink() {
 
 // recent generations
 const recentGenerations = ref([])
+const IMAGE_TASK_TYPES = new Set([3, 4])
 function fetchRecentGenerations() {
   getImageList({ pageSize: 50 }).then(res => {
     if ((res.code === 0 || res.code === 200) && res.data?.rows) {
       recentGenerations.value = res.data.rows
-        .filter(item => item.taskType === 3)
+        .filter(item => IMAGE_TASK_TYPES.has(item.taskType))
         .slice(0, 10)
         .map(item => {
           const urls = (item.internalVideoUrl || item.videoUrl || '')

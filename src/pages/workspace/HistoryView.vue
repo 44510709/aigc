@@ -23,7 +23,14 @@ const filteredItems = computed(() => {
 const TASK_TYPE = {
   IMAGE_TO_VIDEO: 1,
   SCRIPT_TO_VIDEO: 2,
-  TEXT_TO_IMAGE: 3,
+  TEXT_TO_IMAGE_V1: 3,
+  TEXT_TO_IMAGE_V2: 4,
+}
+
+const IMAGE_TASK_TYPES = new Set([TASK_TYPE.TEXT_TO_IMAGE_V1, TASK_TYPE.TEXT_TO_IMAGE_V2])
+
+function isImageTaskType(taskType) {
+  return IMAGE_TASK_TYPES.has(taskType)
 }
 
 function parseUrls(field) {
@@ -32,7 +39,7 @@ function parseUrls(field) {
 }
 
 function extractMedia(item) {
-  if (item.taskType === TASK_TYPE.TEXT_TO_IMAGE) {
+  if (isImageTaskType(item.taskType)) {
     // 图片：internalVideoUrl 优先（可能多张），videoUrl 兜底
     return parseUrls(item.internalVideoUrl).concat(parseUrls(item.videoUrl))
   }
@@ -42,14 +49,13 @@ function extractMedia(item) {
 }
 
 function kindForTaskType(taskType) {
-  if (taskType === TASK_TYPE.TEXT_TO_IMAGE) return 'image'
-  return 'video'
+  return isImageTaskType(taskType) ? 'image' : 'video'
 }
 
 function typeKeyForTaskType(taskType) {
   if (taskType === TASK_TYPE.IMAGE_TO_VIDEO) return 'imageToVideo'
   if (taskType === TASK_TYPE.SCRIPT_TO_VIDEO) return 'scriptToVideo'
-  if (taskType === TASK_TYPE.TEXT_TO_IMAGE) return 'textToImage'
+  if (isImageTaskType(taskType)) return 'textToImage'
   return 'unknown'
 }
 
@@ -306,6 +312,7 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
+  margin-top: 20px;
 }
 
 .history-card {
@@ -516,12 +523,17 @@ onMounted(() => {
 @media (max-width: 1040px) {
   .history-grid {
     grid-template-columns: repeat(2, 1fr);
+    margin-top: 20px;
   }
 }
 
 @media (max-width: 680px) {
   .history-grid {
     grid-template-columns: 1fr;
+    margin-top: 20px;
   }
+}
+.history-panel-header{
+  margin-bottom: 20px;
 }
 </style>
