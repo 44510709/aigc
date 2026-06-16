@@ -204,7 +204,7 @@ function fetchRecentGenerations() {
           progress: item.status === 2 ? 100 : (item.status === 1 ? 50 : 0),
           status: item.status === 2 ? 'done' : (item.status === 1 ? 'processing' : 'pending'),
           tone: ['pink', 'mint', 'sunset'][item.id % 3],
-          url: item.videoUrl,
+          url: item.internalVideoUrl || item.videoUrl,
         }))
     }
   })
@@ -551,8 +551,10 @@ function appendToScript(text) {
               <video
                 :src="item.url"
                 muted
+                autoplay
+                loop
                 playsinline
-                preload="metadata"
+                preload="auto"
                 @loadeddata="onRecentVideoLoaded"
               ></video>
             </div>

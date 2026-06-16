@@ -40,8 +40,8 @@ function parseUrls(field) {
 
 function extractMedia(item) {
   if (isImageTaskType(item.taskType)) {
-    // 图片：internalVideoUrl 优先（可能多张），videoUrl 兜底
-    return parseUrls(item.internalVideoUrl).concat(parseUrls(item.videoUrl))
+    // 图片只取 internalVideoUrl（多张逗号分隔），videoUrl 是同组图片的外网 CDN 副本
+    return parseUrls(item.internalVideoUrl)
   }
   // 视频：取一条
   const url = item.internalVideoUrl || item.videoUrl || ''
