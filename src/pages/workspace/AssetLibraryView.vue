@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Plus, Delete, Upload } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { getMediaList, createMedia, deleteMedia, uploadFile } from '../../api/modules/assets.js'
 
 const { t } = useI18n()
@@ -33,11 +33,24 @@ function fetchMediaList() {
     })
 }
 
-function handleDelete(id) {
+async function handleDelete(id) {
+  try {
+    await ElMessageBox.confirm(
+      t('assets.deleteConfirm'),
+      t('assets.deleteTitle'),
+      {
+        type: 'warning',
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
+      }
+    )
+  } catch {
+    return
+  }
   deleteMedia(id).then(res => {
-    if (res.code === 0) {
-      mediaList.value = mediaList.value.filter(item => item.id !== id)
-      ElMessage.success('删除成功')
+    if (res.code === 0 || res.code === 200) {
+      fetchMediaList()
+      ElMessage.success(t('assets.deleteSuccess'))
     }
   })
 }

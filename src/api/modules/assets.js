@@ -9,7 +9,7 @@ export function createMedia(data) {
 }
 
 export function deleteMedia(id) {
-  return http.delete(`/pc/media/delete/${id}`)
+  return http.post(`/pc/media/delete/${id}`)
 }
 
 export function uploadFile(file) {
