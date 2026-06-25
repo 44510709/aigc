@@ -27,8 +27,8 @@ const form = reactive({
   images: [], // File objects
   imagePreviews: [], // base64 preview urls
   resolution: '2K',
-  customWidth: 2048,
-  customHeight: 2048,
+  customWidth: 2560,
+  customHeight: 2560,
   aspectRatio: '1:1',
   count: 1,
 })
@@ -98,35 +98,33 @@ function decCount() {
 // resolution change
 function onResolutionChange(val) {
   if (val === '2K') {
-    form.customWidth = 2048
-    form.customHeight = 2048
-    if (form.aspectRatio === '1:1') form.customHeight = 2048
+    if (form.aspectRatio === '1:1') { form.customWidth = 2560; form.customHeight = 2560 }
     else if (form.aspectRatio === '16:9') { form.customWidth = 2560; form.customHeight = 1440 }
-    else if (form.aspectRatio === '9:16') { form.customWidth = 1440; form.customHeight = 2560 }
-    else if (form.aspectRatio === '4:3') { form.customWidth = 2304; form.customHeight = 1728 }
-    else if (form.aspectRatio === '3:4') { form.customWidth = 1728; form.customHeight = 2304 }
+    else if (form.aspectRatio === '9:16') { form.customWidth = 2560; form.customHeight = 4551 }
+    else if (form.aspectRatio === '4:3') { form.customWidth = 2560; form.customHeight = 1920 }
+    else if (form.aspectRatio === '3:4') { form.customWidth = 2560; form.customHeight = 3413 }
   } else if (val === '4K') {
-    if (form.aspectRatio === '1:1') { form.customWidth = 4096; form.customHeight = 4096 }
+    if (form.aspectRatio === '1:1') { form.customWidth = 3840; form.customHeight = 3840 }
     else if (form.aspectRatio === '16:9') { form.customWidth = 3840; form.customHeight = 2160 }
-    else if (form.aspectRatio === '9:16') { form.customWidth = 2160; form.customHeight = 3840 }
+    else if (form.aspectRatio === '9:16') { form.customWidth = 3840; form.customHeight = 6827 }
     else if (form.aspectRatio === '4:3') { form.customWidth = 3840; form.customHeight = 2880 }
-    else if (form.aspectRatio === '3:4') { form.customWidth = 2880; form.customHeight = 3840 }
+    else if (form.aspectRatio === '3:4') { form.customWidth = 3840; form.customHeight = 5120 }
   }
 }
 
 function onAspectRatioChange(val) {
   if (form.resolution === '2K') {
-    if (val === '1:1') { form.customWidth = 2048; form.customHeight = 2048 }
+    if (val === '1:1') { form.customWidth = 2560; form.customHeight = 2560 }
     else if (val === '16:9') { form.customWidth = 2560; form.customHeight = 1440 }
-    else if (val === '9:16') { form.customWidth = 1440; form.customHeight = 2560 }
-    else if (val === '4:3') { form.customWidth = 2304; form.customHeight = 1728 }
-    else if (val === '3:4') { form.customWidth = 1728; form.customHeight = 2304 }
+    else if (val === '9:16') { form.customWidth = 2560; form.customHeight = 4551 }
+    else if (val === '4:3') { form.customWidth = 2560; form.customHeight = 1920 }
+    else if (val === '3:4') { form.customWidth = 2560; form.customHeight = 3413 }
   } else if (form.resolution === '4K') {
-    if (val === '1:1') { form.customWidth = 4096; form.customHeight = 4096 }
+    if (val === '1:1') { form.customWidth = 3840; form.customHeight = 3840 }
     else if (val === '16:9') { form.customWidth = 3840; form.customHeight = 2160 }
-    else if (val === '9:16') { form.customWidth = 2160; form.customHeight = 3840 }
+    else if (val === '9:16') { form.customWidth = 3840; form.customHeight = 6827 }
     else if (val === '4:3') { form.customWidth = 3840; form.customHeight = 2880 }
-    else if (val === '3:4') { form.customWidth = 2880; form.customHeight = 3840 }
+    else if (val === '3:4') { form.customWidth = 3840; form.customHeight = 5120 }
   } else {
     // custom — only adjust aspect ratio if user hasn't manually changed (heuristic: keep current)
   }
