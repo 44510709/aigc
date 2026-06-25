@@ -186,6 +186,8 @@ async function generateImages() {
       title: form.title,
       prompt: finalPrompt,
       size: form.resolution,
+      width: form.customWidth,
+      height: form.customHeight,
       maxImages: form.count,
     }
     if (form.images.length > 0) {
@@ -375,7 +377,7 @@ onUnmounted(() => {
               type="textarea"
               :rows="5"
               :placeholder="t('workspace.textToImagePromptPlaceholder')"
-              :maxlength="2000"
+              :maxlength="5000"
               show-word-limit
             />
           </el-form-item>

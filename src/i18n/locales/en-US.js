@@ -86,7 +86,7 @@ export default {
     uploadHint: 'Click or drag image here',
     uploadTip: 'JPG/PNG/WebP, Max 20MB, Max 9 images to upload.',
     maxImagesExceeded: 'Sorry, maximum 9 images allowed.',
-    clickReplace: 'Click to replace image',
+    clickReplace: 'Click to add image',
     chooseAsset: 'Choose from Assets',
     chooseSubject: 'Choose from Subjects',
     style: 'Style',
