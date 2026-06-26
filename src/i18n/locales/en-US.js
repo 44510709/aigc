@@ -120,6 +120,7 @@ export default {
     aspectSquare: '1:1 (Square)',
     select: 'Select',
     deleteSelected: 'Delete Selected ({count})',
+    optimizePrompt: 'AI Optimize Prompt',
     msg: {
       pleaseSelectToDelete: 'Please select images to delete',
       maxImagesReached: 'Sorry, you can upload at most {count} images',
@@ -132,6 +133,8 @@ export default {
       imageGenerateFailed: 'Image generation failed',
       imageGenerateSuccess: 'Images generated successfully',
       linkCopied: 'Link copied',
+      promptOptimized: 'Prompt optimized',
+      optimizeFailed: 'Failed to optimize prompt',
     },
     scriptPlaceholder: 'Paste your video script here...',
     sceneList: 'Scene list',

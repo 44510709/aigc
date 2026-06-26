@@ -121,6 +121,7 @@ export default {
     aspectSquare: '1:1 (方形)',
     select: '选择',
     deleteSelected: '删除所选 ({count})',
+    optimizePrompt: 'AI 一键优化提示词',
     msg: {
       pleaseSelectToDelete: '请先选择要删除的图片',
       maxImagesReached: '抱歉，最多允许上传 {count} 张图片',
@@ -133,6 +134,8 @@ export default {
       imageGenerateFailed: '图片生成失败',
       imageGenerateSuccess: '图片生成完成',
       linkCopied: '链接已复制',
+      promptOptimized: '提示词已优化',
+      optimizeFailed: '提示词优化失败',
     },
     scriptPlaceholder: '在这里输入视频脚本...',
     sceneList: '场景列表',

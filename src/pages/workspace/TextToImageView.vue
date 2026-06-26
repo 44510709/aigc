@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, ref, computed, onMounted, onUnmounted } from 'vue'
+import { reactive, ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import {
@@ -16,7 +16,7 @@ import {
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { uploadFile } from '../../api/modules/assets.js'
-import { createTextToImage, getImageList, getImageDetail } from '../../api/modules/image.js'
+import { createTextToImage, getImageList, getImageDetail, optimizePromptStream } from '../../api/modules/image.js'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -38,6 +38,9 @@ const MIN_COUNT = 1
 const MAX_COUNT = 4
 
 const pageState = ref('empty') // empty | generating | generated
+
+// prompt optimization loading state
+const isOptimizing = ref(false)
 
 // multi-select state for reference images
 const isSelectMode = ref(false)
@@ -100,15 +103,15 @@ function onResolutionChange(val) {
   if (val === '2K') {
     if (form.aspectRatio === '1:1') { form.customWidth = 2560; form.customHeight = 2560 }
     else if (form.aspectRatio === '16:9') { form.customWidth = 2560; form.customHeight = 1440 }
-    else if (form.aspectRatio === '9:16') { form.customWidth = 2560; form.customHeight = 4551 }
+    else if (form.aspectRatio === '9:16') { form.customWidth = 1440; form.customHeight = 2560 }
     else if (form.aspectRatio === '4:3') { form.customWidth = 2560; form.customHeight = 1920 }
-    else if (form.aspectRatio === '3:4') { form.customWidth = 2560; form.customHeight = 3413 }
+    else if (form.aspectRatio === '3:4') { form.customWidth = 1920; form.customHeight = 2560 }
   } else if (val === '4K') {
     if (form.aspectRatio === '1:1') { form.customWidth = 3840; form.customHeight = 3840 }
     else if (form.aspectRatio === '16:9') { form.customWidth = 3840; form.customHeight = 2160 }
-    else if (form.aspectRatio === '9:16') { form.customWidth = 3840; form.customHeight = 6827 }
+    else if (form.aspectRatio === '9:16') { form.customWidth = 2160; form.customHeight = 3840 }
     else if (form.aspectRatio === '4:3') { form.customWidth = 3840; form.customHeight = 2880 }
-    else if (form.aspectRatio === '3:4') { form.customWidth = 3840; form.customHeight = 5120 }
+    else if (form.aspectRatio === '3:4') { form.customWidth = 2880; form.customHeight = 3840 }
   }
 }
 
@@ -116,15 +119,15 @@ function onAspectRatioChange(val) {
   if (form.resolution === '2K') {
     if (val === '1:1') { form.customWidth = 2560; form.customHeight = 2560 }
     else if (val === '16:9') { form.customWidth = 2560; form.customHeight = 1440 }
-    else if (val === '9:16') { form.customWidth = 2560; form.customHeight = 4551 }
+    else if (val === '9:16') { form.customWidth = 1440; form.customHeight = 2560 }
     else if (val === '4:3') { form.customWidth = 2560; form.customHeight = 1920 }
-    else if (val === '3:4') { form.customWidth = 2560; form.customHeight = 3413 }
+    else if (val === '3:4') { form.customWidth = 1920; form.customHeight = 2560 }
   } else if (form.resolution === '4K') {
     if (val === '1:1') { form.customWidth = 3840; form.customHeight = 3840 }
     else if (val === '16:9') { form.customWidth = 3840; form.customHeight = 2160 }
-    else if (val === '9:16') { form.customWidth = 3840; form.customHeight = 6827 }
+    else if (val === '9:16') { form.customWidth = 2160; form.customHeight = 3840 }
     else if (val === '4:3') { form.customWidth = 3840; form.customHeight = 2880 }
-    else if (val === '3:4') { form.customWidth = 3840; form.customHeight = 5120 }
+    else if (val === '3:4') { form.customWidth = 2880; form.customHeight = 3840 }
   } else {
     // custom — only adjust aspect ratio if user hasn't manually changed (heuristic: keep current)
   }
@@ -229,6 +232,69 @@ async function generateImages() {
     console.error('createTextToImage error:', err)
     const msg = err?.response?.data?.msg || err?.msg || err?.message || t('workspace.msg.generateFailed')
     ElMessage.error(msg)
+  }
+}
+
+async function handleOptimizePrompt() {
+  if (isOptimizing.value) return
+  if (!form.prompt.trim()) {
+    ElMessage.warning(t('workspace.msg.fillPrompt'))
+    return
+  }
+  const originalPrompt = form.prompt
+  isOptimizing.value = true
+  let isFirstChunk = true
+  const charBuffer = []
+  let isTyping = false
+  let onTypeDone = null
+
+  function enqueueChars(chars) {
+    for (let i = 0; i < chars.length; i++) {
+      charBuffer.push(chars[i])
+    }
+    if (!isTyping) {
+      isTyping = true
+      typeNext()
+    }
+  }
+
+  async function typeNext() {
+    if (charBuffer.length === 0) {
+      isTyping = false
+      if (onTypeDone) {
+        onTypeDone()
+        onTypeDone = null
+      }
+      return
+    }
+    form.prompt += charBuffer.shift()
+    await nextTick()
+    setTimeout(typeNext, 60)
+  }
+
+  try {
+    await optimizePromptStream(
+      { generateType: 'image', prompt: originalPrompt },
+      (chunk) => {
+        if (isFirstChunk) {
+          form.prompt = ''
+          isFirstChunk = false
+        }
+        enqueueChars(chunk)
+      },
+    )
+    // 流结束，等打字打完
+    if (isTyping) {
+      await new Promise(r => { onTypeDone = r })
+    }
+    ElMessage.success(t('workspace.msg.promptOptimized'))
+  } catch (err) {
+    isTyping = false
+    charBuffer.length = 0
+    form.prompt = originalPrompt
+    ElMessage.error(err?.message || t('workspace.msg.optimizeFailed'))
+  } finally {
+    isOptimizing.value = false
   }
 }
 
@@ -370,14 +436,27 @@ onUnmounted(() => {
           </el-form-item>
 
           <el-form-item :label="t('workspace.prompt')">
-            <el-input
-              v-model="form.prompt"
-              type="textarea"
-              :rows="5"
-              :placeholder="t('workspace.textToImagePromptPlaceholder')"
-              :maxlength="5000"
-              show-word-limit
-            />
+            <div class="prompt-wrapper">
+              <el-input
+                v-model="form.prompt"
+                type="textarea"
+                :rows="5"
+                :placeholder="t('workspace.textToImagePromptPlaceholder')"
+                :maxlength="5000"
+                show-word-limit
+              />
+              <div class="prompt-actions">
+                <el-button
+                  class="optimize-btn"
+                  type="primary"
+                  :loading="isOptimizing"
+                  :disabled="isOptimizing || !form.prompt.trim()"
+                  @click="handleOptimizePrompt"
+                >
+                  {{ t('workspace.optimizePrompt') }}
+                </el-button>
+              </div>
+            </div>
           </el-form-item>
 
           <el-form-item :label="t('workspace.referenceImages')">
@@ -777,6 +856,20 @@ onUnmounted(() => {
   font-size: 10px;
   line-height: 1.1;
   text-align: center;
+}
+
+.prompt-wrapper {
+  width: 100%;
+}
+
+.prompt-wrapper :deep(.el-input) {
+  width: 100%;
+}
+
+.prompt-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
 }
 
 .generation-options {
